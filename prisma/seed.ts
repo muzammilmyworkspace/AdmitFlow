@@ -87,7 +87,6 @@ async function main() {
   await seedRoles();
   await seedProducts();
   await seedFeatureFlags();
-  // eslint-disable-next-line no-console -- CLI script output, not application logging
   console.log("Seed complete: permissions, roles, products/prices, feature flags.");
 }
 

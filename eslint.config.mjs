@@ -14,9 +14,21 @@ const eslintConfig = [
     },
   },
   {
+    // Developer CLI scripts print to stdout by design — that's their whole interface,
+    // unlike application code which must go through the structured logger.
+    files: ["scripts/**/*.mjs", "prisma/seed.ts"],
+    rules: { "no-console": "off" },
+  },
+  {
     // scripts/*.cjs are plain Node preload scripts loaded via NODE_OPTIONS before any
     // bundler/transpiler runs, so they must stay CommonJS — not part of the TS project.
-    ignores: [".next/**", "node_modules/**", "prisma/generated/**", "scripts/**/*.cjs"],
+    ignores: [
+      ".next/**",
+      "node_modules/**",
+      "prisma/generated/**",
+      "scripts/**/*.cjs",
+      ".dev-postgres/**",
+    ],
   },
 ];
 

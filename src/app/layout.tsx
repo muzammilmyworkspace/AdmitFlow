@@ -16,7 +16,11 @@ export const metadata: Metadata = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en">
+    // suppressHydrationWarning: browser extensions (translators, dark-mode tools, etc.)
+    // commonly inject attributes/classes onto <html> before React hydrates, which is a
+    // harmless false-positive mismatch, not an app bug — this only suppresses the warning
+    // for this one element, it does not disable hydration-mismatch checking elsewhere.
+    <html lang="en" suppressHydrationWarning>
       <body className="font-sans antialiased">{children}</body>
     </html>
   );

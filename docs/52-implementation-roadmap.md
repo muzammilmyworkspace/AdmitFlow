@@ -32,13 +32,29 @@ Project scaffold (Next.js 15 App Router, TypeScript strict, Tailwind, ESLint, Pr
   - No real Postgres/Redis/S3 credentials in this environment — `.env` holds placeholder values from `.env.example` for tooling to run against; a real `DATABASE_URL` is needed before `prisma migrate dev` or the seed script can actually run.
 - **Next phase:** Phase 2 — Design System.
 
-## Phase 2 — Design System
+## Phase 2 — Design System 🚧 partial
 
-Primitive components (Button, Input, Select, Checkbox, Radio, Switch, Modal, Drawer, Toast, Badge, Card, Table, Tabs, Progress, Stepper, Timeline, UploadZone, EmptyState, ErrorState, Skeleton) per `07-frontend-architecture.md` §6, built on the logo-derived tokens (`54-decision-log.md` D-12).
+Built so far, on the logo-derived tokens (`54-decision-log.md` D-12): `Button` (4 variants, 3 sizes, loading state), `Input`, `FormField` (label association + `aria-describedby` error wiring, so accessible error states are structural rather than per-form), `Card`, `Alert` (tone-driven `role="alert"`/`"status"`), `Spinner`, and the `cn()` class-composition helper.
 
-## Phase 3 — Authentication
+The remaining primitives from `07-frontend-architecture.md` §6 (Select, Checkbox, Radio, Switch, Modal, Drawer, Toast, Badge, Table, Tabs, Progress, Stepper, Timeline, UploadZone, EmptyState, ErrorState, Skeleton) and the domain components (UniversityCard, DocumentCard, ApplicationCard, ProgressRoadmap, LockedContent, EntitlementBanner) are deliberately **not** built ahead of their first real use — each arrives with the phase that needs it, so its API is shaped by an actual caller rather than guessed.
 
-Signup, email verification, login, logout/logout-all, password reset, OAuth (Google/Apple) linking, session issuance/rotation, account lifecycle state machine enforcement (`31-state-machines.md` §1) — per `13-authentication-authorization.md`.
+## Phase 3 — Authentication ✅ complete (except OAuth)
+
+Signup, email verification (single-use link **and** 6-digit OTP), login, logout, logout-all, forgot/reset password, session issuance, and account lifecycle enforcement per `31-state-machines.md` §1 — all verified end-to-end against a real Postgres instance (`54-decision-log.md` D-16).
+
+**Report:**
+- **Implemented:** `src/services/auth-service.ts` (all business logic), `src/lib/auth/{password,password-policy,tokens,session}.ts`, `src/lib/{audit,api-route,api-client}.ts`, 8 API routes under `/api/v1/auth/*` + `/api/v1/users/me`, and 6 pages (`/signup`, `/login`, `/verify-email`, `/forgot-password`, `/reset-password`, `/dashboard`).
+- **Database:** added `VerificationToken` + `Session.absoluteExpiresAt` (`54-decision-log.md` D-15); two migrations applied; reference-data seed run.
+- **Security verified by live test, not just by reading the code:** identical `AUTH_INVALID_CREDENTIALS` for wrong-password vs. nonexistent-email (with a dummy-hash verify so timing doesn't leak existence either); `forgot-password` returns an identical response for both cases; verification and reset tokens are single-use (reuse rejected); a wrong OTP increments `otpAttempts` (observed 1 in the DB) and is capped at 5; password reset revokes **all** sessions (pre-reset cookie went dead immediately); `logout-all` revoked 2 sessions across "devices"; `/dashboard` 307-redirects server-side when unauthenticated; `/users/me` returns only the caller's own record with no id parameter to tamper with.
+- **Audit trail:** `user.registered`, `user.email_verified`, `user.login`, `user.password_changed` rows all written, actor-attributed, and confirmed in the database.
+- **Tests:** 18/18 passing (password policy, token/OTP generation + hashing + constant-time compare + the documented TTL windows, RBAC, error taxonomy).
+- **Build:** typecheck, lint, tests, and production build all clean — 19 routes.
+- **Known gaps (deliberate, not overlooked):**
+  - **OAuth (Google/Apple) not built** — needs real client credentials that don't exist in this environment. The `OAuthAccount` table and its unique `(provider, providerAccountId)` constraint are already in place for it.
+  - **No real email delivery.** `src/lib/notifications/dev-mailer.ts` logs the verification link/OTP to the server log so the flow is exercisable; it *throws* rather than silently no-ops if `APP_ENV=production`, so this cannot ship unnoticed. Real templated delivery is Phase 16 (`23-notification-system.md`), pending a provider choice (`55-known-risks-and-open-questions.md` I-3).
+  - **Breached-password check not implemented** (`30-validation-rules.md` §2 specifies a Pwned Passwords k-anonymity query) — it needs an outbound HTTP call that belongs behind the worker boundary.
+  - **Rate limiting not yet applied** to these endpoints; `47-rate-limiting.md` specifies concrete limits for login/signup/OTP and it needs Redis, which is not provisioned locally. This is the most important Phase 3 follow-up — the endpoints are currently brute-forceable.
+  - Session rotation on privilege change (`13-authentication-authorization.md` §2.2) is specified but not yet triggered anywhere, since no flow changes roles yet.
 
 ## Phase 4 — Onboarding
 

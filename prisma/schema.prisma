@@ -48,6 +48,7 @@ model User {
   profile     Profile?
   sessions    Session[]
   oauthAccounts OAuthAccount[]
+  verificationTokens VerificationToken[]
   userRoles   UserRole[]
   consultant  Consultant?
 
@@ -125,19 +126,51 @@ model RolePermission {
 }
 
 model Session {
-  id          String    @id @default(uuid())
-  userId      String
-  tokenHash   String    @unique
-  userAgent   String?
-  ipAddress   String?
-  expiresAt   DateTime
-  revokedAt   DateTime?
-  createdAt   DateTime  @default(now())
-  updatedAt   DateTime  @updatedAt
+  id        String    @id @default(uuid())
+  userId    String
+  tokenHash String    @unique
+  userAgent String?
+  ipAddress String?
+  // Sliding idle expiry (default +30d, extended on activity) — docs/13 §2.2.
+  expiresAt DateTime
+  // Absolute cap (+90d from creation) regardless of activity — docs/13 §2.2. A session
+  // past this is rejected even if `expiresAt` was recently slid forward.
+  absoluteExpiresAt DateTime
+  revokedAt DateTime?
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([userId, expiresAt])
+}
+
+// Not present in docs/10-database-schema.md's original ERD, but required by the token
+// flows that docs/12-api-contracts.md §2 and docs/13-authentication-authorization.md §3
+// specify (single-use email-verification link + OTP, and password-reset link). Added
+// during Phase 3 implementation — see docs/54-decision-log.md D-15.
+enum VerificationTokenType {
+  EMAIL_VERIFICATION
+  PASSWORD_RESET
+}
+
+model VerificationToken {
+  id   String                @id @default(uuid())
+  userId String
+  type VerificationTokenType
+  // Raw tokens/OTPs are never stored — only SHA-256 hashes, same principle as Session.
+  tokenHash    String    @unique
+  otpHash      String?
+  otpExpiresAt DateTime?
+  otpAttempts  Int       @default(0)
+  expiresAt    DateTime
+  consumedAt   DateTime?
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, type])
 }
 
 model OAuthAccount {
