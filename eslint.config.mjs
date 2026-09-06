@@ -16,7 +16,7 @@ const eslintConfig = [
   {
     // Developer CLI scripts print to stdout by design — that's their whole interface,
     // unlike application code which must go through the structured logger.
-    files: ["scripts/**/*.mjs", "prisma/seed.ts"],
+    files: ["scripts/**/*.mjs", "prisma/seed*.ts"],
     rules: { "no-console": "off" },
   },
   {

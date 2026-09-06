@@ -174,8 +174,15 @@ async function buildStudentInput(profileId: string): Promise<{
   };
 }
 
-/** Candidate generation — narrows the catalog before scoring (docs/17 §"Candidate generation"). */
-async function loadCandidatePrograms(student: StudentInput): Promise<ProgramInput[]> {
+/**
+ * Candidate generation — docs/17 §"Candidate generation".
+ *
+ * Currently loads the whole (bounded, curated) catalog and lets scoring rank it. That is
+ * deliberate at this size: pre-filtering by the student's stated countries or field would
+ * hide the strong near-miss options that a REACH tier exists to surface. When the catalog
+ * grows past the point where scoring everything is cheap, narrow here — not in scoring.
+ */
+async function loadCandidatePrograms(): Promise<ProgramInput[]> {
   const programs = await db.program.findMany({
     where: {
       deletedAt: null,
@@ -250,7 +257,7 @@ export async function runAssessment(
     );
   }
 
-  const candidates = await loadCandidatePrograms(input);
+  const candidates = await loadCandidatePrograms();
   if (candidates.length === 0) {
     throw new AppError("ASSESSMENT_NOT_READY", "The programme catalog is empty.");
   }

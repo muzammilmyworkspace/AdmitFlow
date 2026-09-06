@@ -82,6 +82,9 @@ export interface WebhookProcessResult {
   status: "PROCESSED" | "DUPLICATE" | "IGNORED";
   purchaseId?: string;
   entitlementsGranted?: number;
+  scope?: { bookingId?: string; assessmentId?: string; applicationId?: string } | null;
+  productKey?: string;
+  customerUserId?: string;
 }
 
 /**
@@ -94,6 +97,42 @@ export interface WebhookProcessResult {
  * a fresh attempt rather than being permanently swallowed (docs/48-idempotency.md §3).
  */
 export async function processWebhookEvent(
+  event: VerifiedWebhookEvent,
+  providerName: "STRIPE" | "PAYPAL",
+): Promise<WebhookProcessResult> {
+  const result = await claimAndApply(event, providerName);
+
+  // Post-commit side effects. These run AFTER the money/entitlement transaction commits,
+  // deliberately: confirming a booking or sending a receipt must never be able to roll
+  // back a settled payment, and a failure here must not make the provider retry an event
+  // whose financial half already succeeded.
+  if (result.status === "PROCESSED" && result.productKey === "CONSULTATION_40MIN") {
+    const bookingId = result.scope?.bookingId;
+    if (bookingId) {
+      try {
+        const { confirmBookingFromPayment } = await import(
+          "@/services/consultation/consultation-service"
+        );
+        await confirmBookingFromPayment(bookingId, result.customerUserId);
+      } catch (error) {
+        // Loud, because the student has paid for a session that is not yet confirmed —
+        // this needs a human, not a silent retry.
+        logger.error("Paid consultation could not be confirmed", {
+          service: "billing",
+          operation: "processWebhookEvent",
+          bookingId,
+          purchaseId: result.purchaseId,
+          errorCode: "INTERNAL_ERROR",
+          detail: error instanceof Error ? error.message : String(error),
+        });
+      }
+    }
+  }
+
+  return result;
+}
+
+async function claimAndApply(
   event: VerifiedWebhookEvent,
   providerName: "STRIPE" | "PAYPAL",
 ): Promise<WebhookProcessResult> {
@@ -209,6 +248,11 @@ export async function processWebhookEvent(
         status: "PROCESSED" as const,
         purchaseId: purchase.id,
         entitlementsGranted: grants.length,
+        // Surfaced so post-commit side effects (confirming a booking, sending a receipt)
+        // can run outside the transaction — see the caller below.
+        scope: purchase.scope as { bookingId?: string } | null,
+        productKey,
+        customerUserId: purchase.customer.userId,
       };
     });
   } catch (error) {

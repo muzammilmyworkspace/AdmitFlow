@@ -12,11 +12,13 @@ import { getEnv } from "@/lib/env";
 // It refuses to run in production rather than silently "sending" nothing: an auth email
 // that vanishes without a trace is worse than a hard failure at deploy time.
 
-export async function sendAuthEmail(params: {
+interface OutboundEmail {
   to: string;
   subject: string;
   body: string;
-}): Promise<void> {
+}
+
+function deliver(operation: string, params: OutboundEmail, context: Record<string, unknown>): void {
   const env = getEnv();
   if (env.APP_ENV === "production") {
     throw new Error(
@@ -24,11 +26,30 @@ export async function sendAuthEmail(params: {
     );
   }
 
-  logger.info("[dev-mailer] auth email (not actually sent)", {
+  logger.info("[dev-mailer] email (not actually sent)", {
     service: "dev-mailer",
-    operation: "sendAuthEmail",
+    operation,
     to: params.to,
     subject: params.subject,
     body: params.body,
+    ...context,
+  });
+}
+
+export async function sendAuthEmail(params: OutboundEmail): Promise<void> {
+  deliver("sendAuthEmail", params, {});
+}
+
+/**
+ * Templated delivery for the notification service (docs/23 §2). Separate from
+ * sendAuthEmail only so the log line carries which event/template produced the message —
+ * the provider path itself is shared, and stays the single place a real provider lands.
+ */
+export async function sendEmail(
+  params: OutboundEmail & { event: string; templateVersion: number },
+): Promise<void> {
+  deliver("sendEmail", params, {
+    event: params.event,
+    templateVersion: params.templateVersion,
   });
 }

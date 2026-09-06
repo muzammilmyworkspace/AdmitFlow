@@ -107,14 +107,7 @@ export async function searchPrograms(filters: ProgramSearchFilters, page: Cursor
     take: pageSize + 1, // one extra row tells us whether another page exists
     ...(page.cursor ? { cursor: { id: page.cursor }, skip: 1 } : {}),
     orderBy: [{ name: "asc" }, { id: "asc" }],
-    include: {
-      university: { include: { country: true, metadata: true } },
-      campus: { include: { city: true } },
-      intakes: { orderBy: { applicationDeadline: "asc" } },
-      tuitionFees: { where: { category: "INTERNATIONAL" }, orderBy: { effectiveFrom: "desc" } },
-      englishRequirements: true,
-      programRequirements: true,
-    },
+    include: PROGRAM_INCLUDE,
   });
 
   const hasMore = rows.length > pageSize;
@@ -130,7 +123,22 @@ export async function searchPrograms(filters: ProgramSearchFilters, page: Cursor
 
 export type ProgramSummary = ReturnType<typeof toProgramSummary>;
 
-function toProgramSummary(program: Awaited<ReturnType<typeof loadProgram>>) {
+/** The include shape every catalog read shares, so the summary mapper has one input type. */
+const PROGRAM_INCLUDE = {
+  university: { include: { country: true, metadata: true } },
+  campus: { include: { city: true } },
+  intakes: { orderBy: { applicationDeadline: "asc" } },
+  tuitionFees: {
+    where: { category: "INTERNATIONAL" },
+    orderBy: { effectiveFrom: "desc" },
+  },
+  englishRequirements: true,
+  programRequirements: true,
+} satisfies Prisma.ProgramInclude;
+
+type ProgramWithRelations = Prisma.ProgramGetPayload<{ include: typeof PROGRAM_INCLUDE }>;
+
+function toProgramSummary(program: ProgramWithRelations) {
   const tuition = program.tuitionFees[0] ?? null;
   const ielts = program.englishRequirements.find((r) => r.testType === "IELTS") ?? null;
   const minGpa = program.programRequirements.find((r) => r.requirementType === "MIN_GPA") ?? null;
@@ -177,30 +185,12 @@ function toProgramSummary(program: Awaited<ReturnType<typeof loadProgram>>) {
   };
 }
 
-async function loadProgram(id: string) {
-  return db.program.findUniqueOrThrow({
-    where: { id },
-    include: {
-      university: { include: { country: true, metadata: true } },
-      campus: { include: { city: true } },
-      intakes: { orderBy: { applicationDeadline: "asc" } },
-      tuitionFees: { where: { category: "INTERNATIONAL" }, orderBy: { effectiveFrom: "desc" } },
-      englishRequirements: true,
-      programRequirements: true,
-    },
-  });
-}
-
 export async function getProgramDetail(id: string) {
   const program = await db.program.findUnique({
     where: { id },
     include: {
+      ...PROGRAM_INCLUDE,
       university: { include: { country: true, metadata: true, scholarships: true } },
-      campus: { include: { city: true } },
-      intakes: { orderBy: { applicationDeadline: "asc" } },
-      tuitionFees: { orderBy: { effectiveFrom: "desc" } },
-      englishRequirements: true,
-      programRequirements: true,
       documentRequirements: true,
       scholarships: true,
     },

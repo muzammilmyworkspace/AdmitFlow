@@ -2,6 +2,9 @@ import { PrismaClient } from "./generated/client";
 import { DEFAULT_ROLE_PERMISSIONS, PERMISSIONS, SYSTEM_ROLES } from "../src/lib/rbac";
 import { DEFAULT_RULES } from "../src/services/assessment/scoring";
 import { seedCatalog } from "./seed-catalog";
+import { seedConsultantAvailability } from "./seed-consultants";
+import { seedTestAccounts } from "./seed-accounts";
+import { seedNotificationTemplates } from "./seed-notifications";
 
 // Deterministic, idempotent seed for reference/config data that ships to every
 // environment including production (roles, permissions, products/prices) — see
@@ -120,7 +123,12 @@ async function main() {
   await seedFeatureFlags();
   await seedAssessmentRules();
   await seedCatalog(db);
-  console.log("Seed complete: permissions, roles, products/prices, feature flags, rules, catalog.");
+  await seedNotificationTemplates(db);
+  await seedConsultantAvailability(db);
+  await seedTestAccounts(db);
+  console.log(
+    "Seed complete: permissions, roles, products/prices, feature flags, rules, catalog, notification templates, consultant availability.",
+  );
 }
 
 main()
