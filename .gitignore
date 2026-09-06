@@ -36,3 +36,6 @@ npm-debug.log*
 !.vscode/extensions.json
 next-env.d.ts
 tsconfig.tsbuildinfo
+
+# local dev object storage (scripts/dev-db + LocalStorageDriver) — never a git artifact
+/.dev-storage/
