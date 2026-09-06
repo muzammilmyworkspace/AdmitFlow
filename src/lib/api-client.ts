@@ -25,14 +25,31 @@ export class ApiError extends Error {
   }
 }
 
-export async function apiPost<T>(path: string, body: unknown): Promise<T> {
+async function request<T>(method: string, path: string, body?: unknown): Promise<T> {
   const response = await fetch(path, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(body),
+    method,
+    headers: body === undefined ? undefined : { "Content-Type": "application/json" },
+    body: body === undefined ? undefined : JSON.stringify(body),
   });
 
-  const payload = (await response.json()) as ApiSuccess<T> | ApiFailure;
+  let payload: ApiSuccess<T> | ApiFailure;
+  try {
+    payload = (await response.json()) as ApiSuccess<T> | ApiFailure;
+  } catch {
+    // A non-JSON response means something upstream failed before the app's error
+    // envelope was applied — surface it as an app error rather than a parse crash.
+    throw new ApiError({
+      code: "INTERNAL_ERROR",
+      message: `Unexpected server response (${response.status}).`,
+      requestId: response.headers.get("x-request-id") ?? "unknown",
+    });
+  }
+
   if (!payload.success) throw new ApiError(payload.error);
   return payload.data;
 }
+
+export const apiGet = <T>(path: string) => request<T>("GET", path);
+export const apiPost = <T>(path: string, body?: unknown) => request<T>("POST", path, body ?? {});
+export const apiPatch = <T>(path: string, body: unknown) => request<T>("PATCH", path, body);
+export const apiDelete = <T>(path: string) => request<T>("DELETE", path);

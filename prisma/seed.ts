@@ -1,5 +1,7 @@
 import { PrismaClient } from "./generated/client";
 import { DEFAULT_ROLE_PERMISSIONS, PERMISSIONS, SYSTEM_ROLES } from "../src/lib/rbac";
+import { DEFAULT_RULES } from "../src/services/assessment/scoring";
+import { seedCatalog } from "./seed-catalog";
 
 // Deterministic, idempotent seed for reference/config data that ships to every
 // environment including production (roles, permissions, products/prices) — see
@@ -82,12 +84,43 @@ async function seedFeatureFlags() {
   });
 }
 
+/**
+ * Scoring rules — docs/16-assessment-engine.md, docs/54-decision-log.md D-6.
+ *
+ * Seeded as version 1 and never mutated afterwards: an admin who retunes the weights
+ * publishes a NEW version, so historical assessments stay explainable under the rules
+ * that actually produced them.
+ */
+async function seedAssessmentRules() {
+  const rules = [
+    { key: "weights", ruleType: "WEIGHTED_FACTOR" as const, config: DEFAULT_RULES.weights },
+    { key: "zone_thresholds", ruleType: "THRESHOLD" as const, config: DEFAULT_RULES.thresholds },
+    { key: "safe_guardrails", ruleType: "THRESHOLD" as const, config: DEFAULT_RULES.safeGuardrails },
+  ];
+
+  for (const rule of rules) {
+    await db.assessmentRule.upsert({
+      where: { key_version: { key: rule.key, version: 1 } },
+      update: {},
+      create: {
+        key: rule.key,
+        version: 1,
+        ruleType: rule.ruleType,
+        config: { ...rule.config },
+        isActive: true,
+      },
+    });
+  }
+}
+
 async function main() {
   await seedPermissions();
   await seedRoles();
   await seedProducts();
   await seedFeatureFlags();
-  console.log("Seed complete: permissions, roles, products/prices, feature flags.");
+  await seedAssessmentRules();
+  await seedCatalog(db);
+  console.log("Seed complete: permissions, roles, products/prices, feature flags, rules, catalog.");
 }
 
 main()

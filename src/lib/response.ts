@@ -23,12 +23,19 @@ export function fail(error: unknown, requestId: string = randomUUID()) {
     if (error.status >= 500) {
       logger.error(error.message, { requestId, errorCode: error.code });
     }
+    const headers = new Headers();
+    // docs/47-rate-limiting.md §3 — a 429 always tells the caller when to retry.
+    const retryAfter = (error.details as { retryAfterSeconds?: number } | undefined)
+      ?.retryAfterSeconds;
+    if (error.code === "RATE_LIMITED" && retryAfter) {
+      headers.set("Retry-After", String(retryAfter));
+    }
     return NextResponse.json(
       {
         success: false as const,
         error: { code: error.code, message: error.message, requestId },
       },
-      { status: error.status },
+      { status: error.status, headers },
     );
   }
 

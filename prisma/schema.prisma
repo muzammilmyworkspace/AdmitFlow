@@ -1053,6 +1053,11 @@ model Purchase {
   priceId    String
   status     PurchaseStatus @default(PENDING)
   quantity   Int            @default(1)
+  // What the resulting entitlement should be scoped to (e.g. {assessmentId}). Recorded
+  // when checkout starts so the webhook applies it from our own record rather than from
+  // anything echoed back by the provider or the browser.
+  scope      Json?
+  expiresAt  DateTime?
   createdAt  DateTime       @default(now())
   updatedAt  DateTime       @updatedAt
 
