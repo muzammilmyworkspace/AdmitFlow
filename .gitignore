@@ -39,3 +39,7 @@ tsconfig.tsbuildinfo
 
 # local dev object storage (scripts/dev-db + LocalStorageDriver) — never a git artifact
 /.dev-storage/
+
+# playwright output
+/test-results/
+/playwright-report/

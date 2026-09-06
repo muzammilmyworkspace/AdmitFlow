@@ -17,10 +17,13 @@ export function LockedZone({
   assessmentId,
   targetCount,
   safeCount,
+  visibleCount,
 }: {
   assessmentId: string;
   targetCount: number;
   safeCount: number;
+  /** How many matches the student can already read, so the copy can't overstate. */
+  visibleCount: number;
 }) {
   const [error, setError] = useState<string | null>(null);
   const [isStarting, setIsStarting] = useState(false);
@@ -52,9 +55,12 @@ export function LockedZone({
       <p className="mb-4 text-sm text-text-secondary">
         Your assessment found <strong>{safeCount}</strong> strong{" "}
         {safeCount === 1 ? "match" : "matches"} and <strong>{targetCount}</strong> good{" "}
-        {targetCount === 1 ? "match" : "matches"} beyond the ambitious options shown above.
+        {targetCount === 1 ? "match" : "matches"}
+        {visibleCount > 0
+          ? `, ${visibleCount} of which ${visibleCount === 1 ? "is" : "are"} shown above.`
+          : "."}{" "}
         Unlock to see the universities, programmes, tuition, deadlines, and the full
-        compatibility breakdown for each.
+        compatibility breakdown for every one.
       </p>
 
       {error && (

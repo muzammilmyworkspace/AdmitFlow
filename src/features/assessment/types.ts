@@ -53,6 +53,7 @@ export interface AssessmentResultsView {
   counts: { REACH: number; TARGET: number; SAFE: number };
   lockedCounts: { TARGET: number; SAFE: number };
   entitlements: { target: boolean; safe: boolean };
+  freePreviewCount: number;
 }
 
 export interface AssessmentHistoryEntry {

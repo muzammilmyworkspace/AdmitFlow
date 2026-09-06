@@ -74,7 +74,24 @@ export interface ProjectedResults {
   counts: { REACH: number; TARGET: number; SAFE: number };
   lockedCounts: { TARGET: number; SAFE: number };
   entitlements: { target: boolean; safe: boolean };
+  /** How many of the visible entries are the always-free preview (see FREE_PREVIEW_COUNT). */
+  freePreviewCount: number;
 }
+
+/**
+ * The free tier is never empty.
+ *
+ * Gating purely by zone looked right until a strong profile was tested against it: a
+ * student with good grades and a real IELTS score matched 15 SAFE and 33 TARGET
+ * programmes and **zero** REACH ones — so the "free assessment" showed them nothing at
+ * all behind a paywall. That is precisely the dark pattern the charter forbids, and it
+ * penalises exactly the students the product works best for.
+ *
+ * So on top of every REACH match, the highest-scoring matches are always readable. The
+ * paywall still gates the overwhelming majority (45 of 48 in that case) and now has an
+ * honest story to tell: here are your three best, here is what unlocking the rest buys.
+ */
+export const FREE_PREVIEW_COUNT = 3;
 
 /**
  * Projects a stored assessment result for a specific viewer.
@@ -107,12 +124,24 @@ export async function projectResultsForUser(
 
   const raw = stored.results as unknown as ProgramAssessment[];
 
+  // The free preview: the best matches that zone gating alone would have hidden. Chosen
+  // by score and then by id so the same assessment always previews the same programmes —
+  // a preview that reshuffled per request would look broken and be untestable.
+  const previewIds = new Set(
+    raw
+      .filter((r) => !isZoneVisible(r.zone, canSeeTarget, canSeeSafe))
+      .sort((a, b) => b.overallScore - a.overallScore || a.programId.localeCompare(b.programId))
+      .slice(0, FREE_PREVIEW_COUNT)
+      .map((r) => r.programId),
+  );
+
+  const isVisible = (entry: ProgramAssessment) =>
+    isZoneVisible(entry.zone, canSeeTarget, canSeeSafe) || previewIds.has(entry.programId);
+
   // Hydrate catalog detail only for the entries this viewer is allowed to see. Locked
   // entries are never even looked up, so their data cannot leak through a logging or
   // serialization mistake further down.
-  const visibleIds = raw
-    .filter((r) => isZoneVisible(r.zone, canSeeTarget, canSeeSafe))
-    .map((r) => r.programId);
+  const visibleIds = raw.filter(isVisible).map((r) => r.programId);
 
   const programs = await db.program.findMany({
     where: { id: { in: visibleIds } },
@@ -131,7 +160,7 @@ export async function projectResultsForUser(
   const results: ProjectedResult[] = raw.map((entry, index) => {
     if (entry.zone in counts) counts[entry.zone as keyof typeof counts] += 1;
 
-    if (!isZoneVisible(entry.zone, canSeeTarget, canSeeSafe)) {
+    if (!isVisible(entry)) {
       if (entry.zone === "TARGET" || entry.zone === "SAFE") lockedCounts[entry.zone] += 1;
       return { locked: true, placeholderId: `locked-${index}`, zone: entry.zone };
     }
@@ -208,6 +237,7 @@ export async function projectResultsForUser(
     counts,
     lockedCounts,
     entitlements: { target: canSeeTarget, safe: canSeeSafe },
+    freePreviewCount: previewIds.size,
   };
 }
 

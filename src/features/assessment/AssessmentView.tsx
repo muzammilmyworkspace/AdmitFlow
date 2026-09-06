@@ -130,6 +130,7 @@ export function AssessmentView() {
             assessmentId={assessmentId}
             targetCount={lockedCounts.TARGET}
             safeCount={lockedCounts.SAFE}
+            visibleCount={visible.filter((r) => r.zone !== "REACH").length}
           />
         </div>
       )}
