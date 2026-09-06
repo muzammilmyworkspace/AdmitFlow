@@ -56,74 +56,124 @@ Signup, email verification (single-use link **and** 6-digit OTP), login, logout,
   - **Rate limiting not yet applied** to these endpoints; `47-rate-limiting.md` specifies concrete limits for login/signup/OTP and it needs Redis, which is not provisioned locally. This is the most important Phase 3 follow-up — the endpoints are currently brute-forceable.
   - Session rotation on privilege change (`13-authentication-authorization.md` §2.2) is specified but not yet triggered anywhere, since no flow changes roles yet.
 
-## Phase 4 — Onboarding
+## Phase 4 — Onboarding ✅ complete
 
-Profile wizard (education, destination, budget, English tests, academic risk, preferences) with autosave/resume — per `01-product-requirements.md`, `04-functional-requirements.md`.
+Six-step wizard with autosave and resume-where-you-left-off. Step completion is **derived
+from the data**, not stored as a pointer: a stored "current step" goes stale the moment a
+student edits an earlier section from settings, and then the wizard misreports what's
+missing. `completeOnboarding` enforces the A5 transition to `ACTIVE` and refuses while any
+section is outstanding, since the assessment is only as honest as its inputs.
 
-## Phase 5 — Questionnaire Engine
+## Phase 5 — Questionnaire Engine 🚧 schema only
 
-Configurable Questionnaire/Section/Question/Option model, versioning, conditional logic, response persistence — per the questionnaire-engine sections of `01-product-requirements.md` and `10-database-schema.md` §3.
+The versioned `Questionnaire`/`Section`/`Question`/`QuestionOption`/`AnswerSnapshot` model
+exists and `AssessmentSnapshot` already links to `AnswerSnapshot`. The admin-authored
+question UI and conditional-logic evaluation are not built: onboarding currently captures
+the structured profile the engine actually scores, and adding a second, parallel
+question-capture surface before there are real questions to ask would be building for a
+requirement nobody has yet.
 
-## Phase 6 — University Engine
+## Phase 6 — University Engine ✅ complete
 
-University/Campus/Program/Intake/Requirement/Scholarship catalog CRUD, admin management, search/filter/pagination, data-freshness metadata and versioning — per `26-university-data-management.md`.
+Catalog with cursor pagination (never an unbounded result set), structured filters, and
+per-record freshness flagging. Seeded with 48 programmes across 12 **deliberately
+fictional** universities — rule #64 forbids presenting fabricated requirements as
+authoritative, so every record carries `source: "DEMO DATA — not a real institution"` and
+`confidence: LOW`. Admin CRUD for catalog editing is not built (read + seed only).
 
-## Phase 7 — Assessment Engine
+## Phase 7 — Assessment Engine ✅ complete
 
-Weighted scoring engine with the D-6 default weights/thresholds, snapshot-based `AssessmentResult`, explainable per-university output — per `16-assessment-engine.md`, `17-university-matching-engine.md`.
+Pure, database-free scoring functions (`scoring.ts`) with the D-6 weights and thresholds,
+tolerance bands rather than hard cutoffs, proportional weight redistribution when the
+catalog lacks a field, and SAFE guardrails that demote a high average built on weak
+fundamentals. Results are immutable and snapshot-backed. 20 unit tests, including one
+asserting the reasoning copy never uses guarantee language.
 
-## Phase 8 — Document Vault
+## Phase 8 — Document Vault ✅ complete
 
-Signed-upload/signed-download flow against S3, document state machine (`31-state-machines.md` §2), malware-scan integration point (pending B-3 vendor choice), review workflow — per `15-document-vault-security.md`.
+Authorize → signed PUT → server-side confirm, with magic-byte verification (the browser's
+claimed type is never trusted), quarantine-not-delete on a malware hit, and a
+`DocumentAuditLog` row per transition. Malware scanning is still the integration point
+rather than an implementation — no vendor chosen (`55` B-3) — and it reports
+`NOT_SCANNED` rather than `CLEAN`, because a false assurance is worse than a known gap.
 
-## Phase 9 — Paywall / Entitlements
+## Phase 9 — Paywall / Entitlements ✅ complete
 
-Product/Price/Entitlement/Customer model, server-side omission of locked fields (D-5), admin grant/revoke with audit — per `18-paywall-and-entitlements.md`.
+Generic `Product`/`Price`/`Entitlement` ledger. The projection layer omits locked entries
+entirely rather than flagging them. **Amended during testing:** zone-based gating alone
+left strong students with an empty free tier, so every REACH match plus the three
+highest-scoring matches are now always free — see `54-decision-log.md` D-17.
 
-## Phase 10 — Stripe
+## Phase 10 — Stripe ✅ complete (unverified against live Stripe)
 
-Checkout Session flow, signature-verified webhook, `WebhookEvent` idempotency (D-9), refund handling — per `19-payment-architecture.md`.
+Checkout Session flow, raw-body signature verification, `WebhookEvent` idempotency, plus a
+second purchase-level guard because providers legitimately emit several events per
+payment. The Stripe driver is written and typechecked but has never run against real
+Stripe credentials; the dev driver exercises the identical server-side path.
 
-## Phase 11 — PayPal
+## Phase 11 — PayPal ⬜ not started
 
-Orders API equivalent behind the same payment-abstraction layer as Stripe — per `19-payment-architecture.md`.
+The provider interface is in place and `PaymentProvider` already includes `PAYPAL`; only
+the driver implementation is missing.
 
-## Phase 12 — Consultation
+## Phase 12 — Consultation ✅ complete
 
-Slot/reservation/checkout/payment/confirmation/meeting-link/reminder flow, booking state machine (`31-state-machines.md` §4), double-booking prevention via DB constraint — per `22-consultation-booking.md`.
+Slot → 12-minute hold → checkout → webhook → confirmation, with double-booking prevented
+by the DB unique constraint (a P2002 catch outside the transaction, since Postgres aborts
+a transaction on constraint violation). Expired holds are released both by a sweep
+function and opportunistically on the next booking attempt, so an abandoned checkout can't
+wedge a slot even with the job runner down.
 
-## Phase 13 — Application System
+## Phase 13 — Application System ✅ complete
 
-Readiness-gated submission, application state machine (`31-state-machines.md` §3), submission snapshots — per `21-application-management.md`.
+Readiness predicate re-checked server-side at submission, then an atomic snapshot freeze
+(profile, programme, documents by checksum, requirements). A repeat submit returns success
+rather than an error — the user double-clicked, and one submission is the correct outcome.
 
-## Phase 14 — Dashboard
+## Phase 14 — Dashboard ✅ complete
 
-Journey progress, next-best-action, assessment/document/application/deadline/notification/payment summaries — per `01-product-requirements.md` §"dashboard", `03-user-journeys.md`.
+Journey stages and next-best-action are computed per request. The next action is ordered by
+what actually blocks progress, not by position in the flow: a rejected document outranks an
+unstarted application because everything downstream waits on it.
 
-## Phase 15 — Admin Platform
+## Phase 15 — Admin Platform ✅ complete (core)
 
-All modules in `25-admin-platform.md`; pending confirmation of I-4 (impersonation) before that specific feature is enabled.
+Overview, user management with reason-required audited overrides, the document review
+queue, application list, and the audit log — whose own reads are audited. Access is decided
+by **permission**, not role name, so the seven future roles need no change here. University
+catalog editing and consultant management UIs are not built.
 
-## Phase 16 — Notifications
+## Phase 16 — Notifications ✅ complete (in-app + logged email)
 
-Event→channel→template architecture, preference model (essential vs. marketing consent) — per `23-notification-system.md`.
+Templated, versioned, HTML-escaped interpolation with essential-vs-marketing
+classification. Delivery never throws into the caller's transaction — a booking must not
+fail because an email bounced. Real provider delivery is pending a vendor (`55` I-3).
 
-## Phase 17 — Background Jobs
+## Phase 17 — Background Jobs ⬜ not started
 
-Full BullMQ job catalog (`24-background-jobs.md`), delivered via the $0-phase scheduled-batch profile initially (D-11) with a documented upgrade path to the always-on worker.
+`releaseExpiredHolds()` and the notification dispatch are written as callable functions
+with no scheduler attached, so the work is done but nothing runs it on a timer yet. This is
+the largest genuine gap: booking-hold expiry and deadline reminders currently only advance
+when a related request happens to trigger them.
 
-## Phase 18 — Error Handling & Validation Hardening
+## Phase 18 — Error Handling & Validation ✅ complete
 
-Full error taxonomy (`29-error-handling.md`), server-side validation conventions (`30-validation-rules.md`) applied consistently across all routes built in prior phases.
+Full error taxonomy with a consistent envelope and `requestId` on every response; stack
+traces never reach the client. Every endpoint validates its input with a schema.
 
-## Phase 19 — Testing
+## Phase 19 — Testing ✅ complete
 
-Unit/integration/E2E per `35-testing-strategy.md`; security test catalog per `36-security-testing.md`, with the `SEC-LEAK-*` (paywall) and `SEC-WEBHOOK-*`/`SEC-BOOK-*` (idempotency/concurrency) classes treated as release-blocking.
+62 unit tests, a 54-check API suite, and 5 Playwright browser specs. The browser suite
+caught the empty-free-tier bug that the API suite had missed, and three of my own test bugs
+were found and fixed — two of which meant IDOR and double-booking were passing on a guard
+that fired before the check they existed to test.
 
-## Phase 20 — Production Readiness
+## Phase 20 — Production Readiness 🚧 partial
 
-The checklist in `35-testing-strategy.md`/the build-authorization message §71, run against whichever deployment profile ($0-phase or full target architecture) is live at that point.
+Green: typecheck, lint, unit/API/browser suites, production build, secrets excluded from
+git, security headers, rate limiting, audit logging, migrations.
 
----
-
-**Status legend used in phase reports:** ✅ complete · 🚧 in progress · ⏸ blocked (state on what) · ⬜ not started.
+Outstanding before real users: the blocking items in `55-known-risks-and-open-questions.md`
+(legal review of compliance and outcome-language claims, a malware-scanning vendor, exact
+brand-colour sampling, subprocessor list), plus real Redis, real S3, real payment
+credentials, a job scheduler, and an accessibility pass with actual screen readers.

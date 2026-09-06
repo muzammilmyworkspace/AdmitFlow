@@ -20,7 +20,10 @@
     "db:seed": "tsx prisma/seed.ts",
     "devdb:start": "node scripts/dev-db.mjs start",
     "devdb:stop": "node scripts/dev-db.mjs stop",
-    "worker": "tsx src/worker/index.ts"
+    "worker": "tsx src/worker/index.ts",
+    "test:e2e": "playwright test",
+    "test:api": "bash scripts/e2e.sh",
+    "verify": "npm run typecheck && npm run lint && npm test && npm run build"
   },
   "dependencies": {
     "@aws-sdk/client-s3": "^3.767.0",

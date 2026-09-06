@@ -117,6 +117,45 @@ This log records every architecturally significant decision made during Phase 0 
 **Open question (see `55-known-risks-and-open-questions.md`):** `#3DA35D` is a reasonable professional-green approximation, not a pixel-sampled value — confirm the exact hex against the source vector/high-res logo file before final brand sign-off, and run the AA contrast check called for in `43-accessibility.md` before using it for any text smaller than "large text" size.
 **Future implications:** `07-frontend-architecture.md` §7 is now binding on this point and supersedes the placeholder table originally given in the discovery brief.
 
+## D-17. The free tier is a preview, not a zone
+
+**Context:** The paywall was specified as zone-based — REACH free, TARGET and SAFE paid
+(D-5). That reads sensibly and was implemented that way. A Playwright test then drove the
+real UI with a strong profile (GPA 3.6, IELTS 7.5) and exposed the flaw: that student
+matched 15 SAFE and 33 TARGET programmes and **zero** REACH ones, so the "free assessment"
+showed them nothing whatsoever — an empty page behind a paywall, with copy that read
+"beyond the ambitious options shown above" when nothing was shown above.
+
+This is not an edge case. REACH means "a stretch on some requirement", so a strong
+applicant having none of them is the normal outcome, and the rule therefore withheld
+everything from precisely the students the product serves best. It is also the dark
+pattern `00-project-charter.md` explicitly forbids.
+
+**Options:** (a) accept it and reword the copy, (b) always unlock a fixed number of top
+matches in addition to REACH, (c) unlock the top N only when the free tier would otherwise
+be empty.
+
+**Chosen:** (b). Every REACH match stays free, plus the three highest-scoring matches
+regardless of zone (`FREE_PREVIEW_COUNT` in `result-projection.ts`).
+
+**Why not (c):** a rule that only fires sometimes is harder to reason about, harder to
+test, and produces an inconsistent product — two students would get materially different
+free experiences for reasons neither could see. A rule that always applies is explicable in
+one sentence.
+
+**Why not (a):** the honest version of that copy is "pay to see any of your results",
+which is the thing the charter rules out.
+
+**Tradeoffs:** three strong matches are given away that were previously paid. In exchange
+the paywall still gates the large majority (45 of 48 in the case that exposed this) and
+gains an honest, concrete pitch — *here are your three best, here is everything else* —
+rather than asking for money sight-unseen. The preview is deterministic (score, then id)
+so the same assessment always previews the same programmes.
+
+**Security note:** the locked payload is unchanged. Locked entries still carry only
+`locked`, `placeholderId` and `zone`, verified by the `SEC-LEAK` checks after the change.
+The preview widens *who is visible*, never *what a locked entry reveals*.
+
 ## D-15. `VerificationToken` table added (gap in the original ERD)
 
 **Context:** `12-api-contracts.md` §2 and `13-authentication-authorization.md` §3 both specify token-based email verification (single-use 256-bit link token, 24h) plus a 6-digit OTP (10 min, max 5 attempts), and a password-reset token (30 min) — but `10-database-schema.md`'s ERD has no table to store any of them. `Session` is the wrong home: these are pre-authentication, single-use, and have different lifetimes and attempt-counting semantics.
