@@ -1,0 +1,60 @@
+{
+  "name": "admitflow",
+  "version": "0.1.0",
+  "private": true,
+  "description": "AdmitFlow by SNZ Ventures — Say No to Consultants.",
+  "scripts": {
+    "dev": "cross-env NODE_OPTIONS=\"--require ./scripts/win-legacy-junction-shim.cjs\" next dev",
+    "build": "cross-env NODE_OPTIONS=\"--require ./scripts/win-legacy-junction-shim.cjs\" next build",
+    "start": "next start",
+    "lint": "eslint .",
+    "typecheck": "tsc --noEmit",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "db:generate": "prisma generate",
+    "db:migrate": "prisma migrate dev",
+    "db:migrate:deploy": "prisma migrate deploy",
+    "db:studio": "prisma studio",
+    "db:seed": "tsx prisma/seed.ts",
+    "worker": "tsx src/worker/index.ts"
+  },
+  "dependencies": {
+    "@aws-sdk/client-s3": "^3.767.0",
+    "@aws-sdk/s3-request-presigner": "^3.767.0",
+    "@prisma/client": "^6.6.0",
+    "argon2": "^0.41.1",
+    "bullmq": "^5.41.5",
+    "clsx": "^2.1.1",
+    "ioredis": "^5.4.2",
+    "next": "15.3.0",
+    "react": "19.1.0",
+    "react-dom": "19.1.0",
+    "stripe": "^17.7.0",
+    "tailwind-merge": "^3.0.2",
+    "zod": "^3.24.2"
+  },
+  "devDependencies": {
+    "@eslint/eslintrc": "^3.3.0",
+    "@types/node": "^22.13.9",
+    "@types/react": "^19.0.10",
+    "@types/react-dom": "^19.0.4",
+    "autoprefixer": "^10.4.20",
+    "cross-env": "^10.1.0",
+    "dotenv": "^16.6.1",
+    "eslint": "^9.21.0",
+    "eslint-config-next": "15.3.0",
+    "postcss": "^8.5.3",
+    "prettier": "^3.5.2",
+    "prettier-plugin-tailwindcss": "^0.6.11",
+    "prisma": "^6.6.0",
+    "tailwindcss": "^3.4.17",
+    "tsx": "^4.19.3",
+    "typescript": "^5.7.3",
+    "vitest": "^3.0.7"
+  },
+  "engines": {
+    "node": ">=20.9.0"
+  }
+}

@@ -1,0 +1,1413 @@
+// AdmitFlow by SNZ Ventures — Prisma schema
+// Authoritative source: docs/10-database-schema.md (+ corrections logged in docs/54-decision-log.md D-8)
+// Conventions: docs/09-database-architecture.md — UUID ids, UTC timestamps, soft delete for
+// anything with historical/legal significance, RESTRICT (never CASCADE) on financial/audit/
+// reproducibility relations per docs/10-database-schema.md §13.
+
+generator client {
+  provider = "prisma-client-js"
+  output   = "../prisma/generated/client"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ============================================================================
+// 1. Identity & Access — docs/10-database-schema.md §2, docs/13-authentication-authorization.md
+// ============================================================================
+
+enum AccountStatus {
+  REGISTERED
+  EMAIL_UNVERIFIED
+  VERIFIED
+  ONBOARDING
+  ACTIVE
+  SUSPENDED
+  DEACTIVATED
+  DELETED
+}
+
+enum OAuthProvider {
+  GOOGLE
+  APPLE
+}
+
+model User {
+  id              String        @id @default(uuid())
+  email           String        @unique
+  emailVerifiedAt DateTime?
+  passwordHash    String?
+  status          AccountStatus @default(REGISTERED)
+  lastLoginAt     DateTime?
+  deletedAt       DateTime?
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+
+  profile     Profile?
+  sessions    Session[]
+  oauthAccounts OAuthAccount[]
+  userRoles   UserRole[]
+  consultant  Consultant?
+
+  documentsOwned          Document[]           @relation("DocumentOwner")
+  documentReviewsAuthored DocumentReview[]      @relation("DocumentReviewer")
+  documentAuditActions    DocumentAuditLog[]    @relation("DocumentAuditActor")
+
+  applicationsAsStudent   Application[]         @relation("ApplicationStudent")
+  applicationStatusChanges ApplicationStatusHistory[] @relation("ApplicationStatusActor")
+
+  bookingsAsStudent       Booking[]             @relation("BookingStudent")
+
+  customer                Customer?
+
+  notifications           Notification[]
+
+  auditLogEntries         AuditLog[]            @relation("AuditLogActor")
+
+  universityMetadataVerified UniversityMetadata[] @relation("UniversityMetadataVerifier")
+
+  roleAssignmentsMade     UserRole[]            @relation("UserRoleAssignedBy")
+
+  @@index([status])
+}
+
+model Role {
+  id          String   @id @default(uuid())
+  name        String   @unique
+  description String
+  isSystem    Boolean  @default(false)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  userRoles       UserRole[]
+  rolePermissions RolePermission[]
+}
+
+model Permission {
+  id          String   @id @default(uuid())
+  key         String   @unique
+  description String
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  rolePermissions RolePermission[]
+}
+
+model UserRole {
+  id         String    @id @default(uuid())
+  userId     String
+  roleId     String
+  assignedAt DateTime  @default(now())
+  assignedBy String?
+  createdAt  DateTime  @default(now())
+  updatedAt  DateTime  @updatedAt
+
+  user           User  @relation(fields: [userId], references: [id])
+  role           Role  @relation(fields: [roleId], references: [id])
+  assignedByUser User? @relation("UserRoleAssignedBy", fields: [assignedBy], references: [id])
+
+  @@unique([userId, roleId])
+}
+
+model RolePermission {
+  id           String   @id @default(uuid())
+  roleId       String
+  permissionId String
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  role       Role       @relation(fields: [roleId], references: [id])
+  permission Permission @relation(fields: [permissionId], references: [id])
+
+  @@unique([roleId, permissionId])
+}
+
+model Session {
+  id          String    @id @default(uuid())
+  userId      String
+  tokenHash   String    @unique
+  userAgent   String?
+  ipAddress   String?
+  expiresAt   DateTime
+  revokedAt   DateTime?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, expiresAt])
+}
+
+model OAuthAccount {
+  id                String        @id @default(uuid())
+  userId            String
+  provider          OAuthProvider
+  providerAccountId String
+  accessTokenEnc    String?
+  refreshTokenEnc   String?
+  linkedAt          DateTime      @default(now())
+  createdAt         DateTime      @default(now())
+  updatedAt         DateTime      @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+}
+
+// ============================================================================
+// 2. Student Profile — docs/10-database-schema.md §3
+// ============================================================================
+
+enum EducationLevel {
+  HIGH_SCHOOL
+  BACHELORS
+  MASTERS
+  DOCTORATE
+  OTHER
+}
+
+enum GradingScale {
+  GPA_4
+  GPA_5
+  PERCENTAGE
+  UK_HONOURS
+  OTHER
+}
+
+enum LanguageTestType {
+  IELTS
+  TOEFL
+  PTE
+  DUOLINGO
+  CAMBRIDGE
+  OTHER
+}
+
+enum StudyMode {
+  ON_CAMPUS
+  ONLINE
+  HYBRID
+  NO_PREFERENCE
+}
+
+enum CampusSizePreference {
+  SMALL
+  MEDIUM
+  LARGE
+  NO_PREFERENCE
+}
+
+enum ScholarshipPriority {
+  LOW
+  MEDIUM
+  HIGH
+}
+
+model Profile {
+  id                     String    @id @default(uuid())
+  userId                 String    @unique
+  firstName              String
+  lastName               String
+  dateOfBirth            DateTime?
+  nationalityCountryId   String?
+  currentCountryId       String?
+  phone                  String?
+  budgetMin              Decimal?
+  budgetMax              Decimal?
+  budgetCurrency         String?
+  onboardingCompletedAt  DateTime?
+  version                Int       @default(1)
+  createdAt              DateTime  @default(now())
+  updatedAt              DateTime  @updatedAt
+
+  user                User                       @relation(fields: [userId], references: [id])
+  nationalityCountry  Country?                   @relation("ProfileNationality", fields: [nationalityCountryId], references: [id])
+  currentCountry      Country?                   @relation("ProfileCurrentCountry", fields: [currentCountryId], references: [id])
+  destinationCountries ProfileDestinationCountry[]
+  educations          Education[]
+  languageTests       LanguageTest[]
+  preference          Preference?
+  questionnaireResponses QuestionnaireResponse[]
+  assessments         Assessment[]
+}
+
+model ProfileDestinationCountry {
+  id        String   @id @default(uuid())
+  profileId String
+  countryId String
+  rank      Int
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  profile Profile @relation(fields: [profileId], references: [id])
+  country Country @relation(fields: [countryId], references: [id])
+
+  @@unique([profileId, countryId])
+}
+
+model Education {
+  id              String         @id @default(uuid())
+  profileId       String
+  level           EducationLevel
+  institutionName String
+  countryId       String
+  fieldOfStudy    String?
+  startDate       DateTime?
+  endDate         DateTime?
+  isCurrent       Boolean        @default(false)
+  gradingScale    GradingScale
+  gradeValue      Decimal?
+  createdAt       DateTime       @default(now())
+  updatedAt       DateTime       @updatedAt
+
+  profile         Profile          @relation(fields: [profileId], references: [id])
+  country         Country          @relation(fields: [countryId], references: [id])
+  academicRecords AcademicRecord[]
+
+  @@index([profileId, isCurrent])
+}
+
+model AcademicRecord {
+  id          String   @id @default(uuid())
+  educationId String
+  termLabel   String
+  gradeValue  Decimal?
+  hasGap      Boolean  @default(false)
+  gapReason   String?
+  gapMonths   Int?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  education Education @relation(fields: [educationId], references: [id])
+
+  @@index([educationId])
+}
+
+model LanguageTest {
+  id            String           @id @default(uuid())
+  profileId     String
+  testType      LanguageTestType
+  overallScore  Decimal
+  sectionScores Json
+  testDate      DateTime
+  expiryDate    DateTime?
+  documentId    String?
+  createdAt     DateTime         @default(now())
+  updatedAt     DateTime         @updatedAt
+
+  profile  Profile   @relation(fields: [profileId], references: [id])
+  document Document? @relation(fields: [documentId], references: [id])
+
+  @@index([profileId, testType])
+}
+
+model Preference {
+  id                   String               @id @default(uuid())
+  profileId            String               @unique
+  studyMode            StudyMode            @default(NO_PREFERENCE)
+  campusSizePreference CampusSizePreference @default(NO_PREFERENCE)
+  scholarshipPriority  ScholarshipPriority  @default(MEDIUM)
+  intakePreference     String?
+  createdAt            DateTime             @default(now())
+  updatedAt            DateTime             @updatedAt
+
+  profile Profile @relation(fields: [profileId], references: [id])
+}
+
+// ============================================================================
+// 3. Questionnaire (configurable, versioned) — docs/10-database-schema.md §4
+// ============================================================================
+
+enum QuestionnaireVersionStatus {
+  DRAFT
+  PUBLISHED
+  RETIRED
+}
+
+enum QuestionType {
+  SINGLE_CHOICE
+  MULTI_CHOICE
+  NUMBER
+  TEXT
+  DATE
+  BOOLEAN
+  SCALE
+}
+
+enum QuestionnaireResponseStatus {
+  IN_PROGRESS
+  SUBMITTED
+}
+
+model Questionnaire {
+  id       String   @id @default(uuid())
+  key      String   @unique
+  name     String
+  isActive Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  versions QuestionnaireVersion[]
+}
+
+model QuestionnaireVersion {
+  id              String                     @id @default(uuid())
+  questionnaireId String
+  versionNumber   Int
+  status          QuestionnaireVersionStatus @default(DRAFT)
+  publishedAt     DateTime?
+  retiredAt       DateTime?
+  createdAt       DateTime                   @default(now())
+  updatedAt       DateTime                   @updatedAt
+
+  questionnaire Questionnaire            @relation(fields: [questionnaireId], references: [id])
+  sections      Section[]
+  responses     QuestionnaireResponse[]
+
+  @@unique([questionnaireId, versionNumber])
+}
+
+model Section {
+  id                     String   @id @default(uuid())
+  questionnaireVersionId String
+  title                  String
+  order                  Int
+  createdAt              DateTime @default(now())
+  updatedAt              DateTime @updatedAt
+
+  questionnaireVersion QuestionnaireVersion @relation(fields: [questionnaireVersionId], references: [id])
+  questions            Question[]
+
+  @@index([questionnaireVersionId, order])
+}
+
+model Question {
+  id         String       @id @default(uuid())
+  sectionId  String
+  key        String
+  label      String
+  type       QuestionType
+  isRequired Boolean      @default(true)
+  order      Int
+  helpText   String?
+  createdAt  DateTime     @default(now())
+  updatedAt  DateTime     @updatedAt
+
+  section Section          @relation(fields: [sectionId], references: [id])
+  options QuestionOption[]
+
+  @@unique([sectionId, key])
+}
+
+model QuestionOption {
+  id          String   @id @default(uuid())
+  questionId  String
+  value       String
+  label       String
+  order       Int
+  scoreWeight Decimal?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  question Question @relation(fields: [questionId], references: [id])
+
+  @@unique([questionId, value])
+}
+
+model QuestionnaireResponse {
+  id                     String                      @id @default(uuid())
+  profileId              String
+  questionnaireVersionId String
+  status                 QuestionnaireResponseStatus @default(IN_PROGRESS)
+  submittedAt            DateTime?
+  createdAt              DateTime                    @default(now())
+  updatedAt              DateTime                    @updatedAt
+
+  profile              Profile              @relation(fields: [profileId], references: [id])
+  questionnaireVersion QuestionnaireVersion @relation(fields: [questionnaireVersionId], references: [id])
+  answerSnapshot       AnswerSnapshot?
+
+  @@index([profileId, questionnaireVersionId])
+}
+
+model AnswerSnapshot {
+  id                      String   @id @default(uuid())
+  questionnaireResponseId String   @unique
+  payload                 Json
+  capturedAt              DateTime @default(now())
+  createdAt               DateTime @default(now())
+  updatedAt               DateTime @updatedAt
+
+  questionnaireResponse QuestionnaireResponse @relation(fields: [questionnaireResponseId], references: [id])
+  assessmentSnapshots   AssessmentSnapshot[]
+}
+
+// ============================================================================
+// 4. Documents (private vault) — docs/10-database-schema.md §5, docs/15-document-vault-security.md
+// ============================================================================
+
+enum DocumentType {
+  PASSPORT
+  TRANSCRIPT
+  DEGREE_CERTIFICATE
+  LANGUAGE_TEST_REPORT
+  SOP
+  CV
+  RECOMMENDATION_LETTER
+  FINANCIAL_STATEMENT
+  OTHER
+}
+
+// Pre-row states REQUIRED/MISSING are surfaced by the requirements engine before any
+// Document row exists (docs/10-database-schema.md §5.1.1) — not part of this enum.
+enum DocumentStatus {
+  UPLOAD_INITIATED
+  UPLOADED
+  PROCESSING
+  PENDING_REVIEW
+  VERIFIED
+  REJECTED
+  EXPIRED
+  REPLACED
+  DELETED
+}
+
+enum DocumentReviewOutcome {
+  APPROVED
+  REJECTED
+}
+
+enum DocumentAuditActorType {
+  STUDENT
+  ADMIN
+  SYSTEM
+}
+
+model Document {
+  id                   String         @id @default(uuid())
+  ownerId              String
+  type                 DocumentType
+  s3Bucket             String
+  s3Key                String         @unique
+  originalFilename     String
+  mimeType             String
+  sizeBytes            BigInt
+  checksumSha256       String
+  status               DocumentStatus @default(UPLOAD_INITIATED)
+  currentVersionNumber Int            @default(1)
+  deletedAt            DateTime?
+  createdAt            DateTime       @default(now())
+  updatedAt            DateTime       @updatedAt
+
+  owner                User                 @relation("DocumentOwner", fields: [ownerId], references: [id])
+  reviews              DocumentReview[]
+  auditLogs            DocumentAuditLog[]
+  requirementsFulfilled DocumentRequirement[]
+  languageTests        LanguageTest[]
+  applicationDocuments ApplicationDocument[]
+  applicationDocumentSnapshots ApplicationDocumentSnapshot[]
+
+  @@index([ownerId, status])
+}
+
+model DocumentRequirement {
+  id                    String       @id @default(uuid())
+  programId             String?
+  documentType          DocumentType
+  isMandatory           Boolean      @default(true)
+  description           String?
+  fulfillingDocumentId  String?
+  createdAt             DateTime     @default(now())
+  updatedAt             DateTime     @updatedAt
+
+  program             Program?              @relation(fields: [programId], references: [id])
+  fulfillingDocument  Document?             @relation(fields: [fulfillingDocumentId], references: [id])
+  applicationDocuments ApplicationDocument[]
+
+  @@index([programId, documentType])
+}
+
+model DocumentReview {
+  id            String                @id @default(uuid())
+  documentId    String
+  reviewerId    String
+  versionNumber Int
+  outcome       DocumentReviewOutcome
+  reasonCode    String?
+  notes         String?
+  reviewedAt    DateTime              @default(now())
+  createdAt     DateTime              @default(now())
+  updatedAt     DateTime              @updatedAt
+
+  document Document @relation(fields: [documentId], references: [id])
+  reviewer User     @relation("DocumentReviewer", fields: [reviewerId], references: [id])
+
+  @@index([documentId, versionNumber])
+}
+
+// Append-only — never updated, no deletedAt (docs/10-database-schema.md §5.4).
+model DocumentAuditLog {
+  id         String                 @id @default(uuid())
+  documentId String
+  actorId    String?
+  actorType  DocumentAuditActorType
+  action     String
+  fromStatus String?
+  toStatus   String?
+  metadata   Json?
+  createdAt  DateTime               @default(now())
+
+  document Document @relation(fields: [documentId], references: [id])
+  actor    User?    @relation("DocumentAuditActor", fields: [actorId], references: [id])
+
+  @@index([documentId, createdAt(sort: Desc)])
+}
+
+// ============================================================================
+// 5. University Catalog — docs/10-database-schema.md §6, docs/26-university-data-management.md
+// ============================================================================
+
+enum ProgramLevel {
+  BACHELORS
+  MASTERS
+  DOCTORATE
+  DIPLOMA
+  CERTIFICATE
+}
+
+enum DeliveryMode {
+  ON_CAMPUS
+  ONLINE
+  HYBRID
+}
+
+enum ProgramRequirementType {
+  MIN_GPA
+  PRIOR_FIELD
+  STANDARDIZED_TEST
+  WORK_EXPERIENCE
+  OTHER
+}
+
+enum IntakeStatus {
+  UPCOMING
+  OPEN
+  CLOSED
+}
+
+enum TuitionCategory {
+  INTERNATIONAL
+  DOMESTIC
+}
+
+enum TuitionPeriod {
+  TOTAL
+  PER_YEAR
+  PER_SEMESTER
+}
+
+enum UniversityDataConfidence {
+  HIGH
+  MEDIUM
+  LOW
+}
+
+model Country {
+  id       String  @id @default(uuid())
+  isoCode2 String  @unique
+  name     String
+  region   String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  cities                   City[]
+  universities             University[]
+  educations               Education[]
+  profileNationalities     Profile[]                   @relation("ProfileNationality")
+  profileCurrentCountries  Profile[]                   @relation("ProfileCurrentCountry")
+  profileDestinations      ProfileDestinationCountry[]
+}
+
+model City {
+  id        String   @id @default(uuid())
+  countryId String
+  name      String
+  timezone  String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  country Country  @relation(fields: [countryId], references: [id])
+  campuses Campus[]
+
+  @@index([countryId])
+}
+
+model University {
+  id                String    @id @default(uuid())
+  name              String
+  countryId         String
+  websiteUrl        String?
+  logoS3Key         String?
+  worldRanking      Int?
+  accreditationBody String?
+  deletedAt         DateTime?
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
+
+  country      Country              @relation(fields: [countryId], references: [id])
+  campuses     Campus[]
+  programs     Program[]
+  metadata     UniversityMetadata?
+  scholarships Scholarship[]
+
+  @@index([countryId])
+}
+
+model Campus {
+  id           String    @id @default(uuid())
+  universityId String
+  cityId       String?
+  name         String
+  isOnline     Boolean   @default(false)
+  deletedAt    DateTime?
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+
+  university University @relation(fields: [universityId], references: [id])
+  city       City?      @relation(fields: [cityId], references: [id])
+  programs   Program[]
+}
+
+model Program {
+  id             String       @id @default(uuid())
+  universityId   String
+  campusId       String?
+  name           String
+  level          ProgramLevel
+  fieldOfStudy   String
+  durationMonths Int
+  deliveryMode   DeliveryMode
+  deletedAt      DateTime?
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
+
+  university            University             @relation(fields: [universityId], references: [id])
+  campus                Campus?                @relation(fields: [campusId], references: [id])
+  intakes               Intake[]
+  programRequirements   ProgramRequirement[]
+  englishRequirements   EnglishRequirement[]
+  tuitionFees           TuitionFee[]
+  scholarships          Scholarship[]
+  documentRequirements  DocumentRequirement[]
+  applications          Application[]
+
+  @@index([universityId, level, fieldOfStudy])
+}
+
+model ProgramRequirement {
+  id              String                 @id @default(uuid())
+  programId       String
+  requirementType ProgramRequirementType
+  minValue        Decimal?
+  description     String
+  isMandatory     Boolean                @default(true)
+  createdAt       DateTime               @default(now())
+  updatedAt       DateTime               @updatedAt
+
+  program Program @relation(fields: [programId], references: [id])
+
+  @@index([programId])
+}
+
+model EnglishRequirement {
+  id               String           @id @default(uuid())
+  programId        String
+  testType         LanguageTestType
+  minOverallScore  Decimal
+  minSectionScores Json?
+  createdAt        DateTime         @default(now())
+  updatedAt        DateTime         @updatedAt
+
+  program Program @relation(fields: [programId], references: [id])
+
+  @@unique([programId, testType])
+}
+
+model Intake {
+  id                   String       @id @default(uuid())
+  programId            String
+  term                 String
+  applicationOpenDate  DateTime
+  applicationDeadline  DateTime
+  startDate            DateTime
+  status               IntakeStatus @default(UPCOMING)
+  capacity             Int?
+  createdAt            DateTime     @default(now())
+  updatedAt            DateTime     @updatedAt
+
+  program      Program       @relation(fields: [programId], references: [id])
+  applications Application[]
+
+  @@unique([programId, term])
+  @@index([programId, status])
+}
+
+model TuitionFee {
+  id             String          @id @default(uuid())
+  programId      String
+  category       TuitionCategory
+  amount         Decimal
+  currency       String
+  perPeriod      TuitionPeriod
+  effectiveFrom  DateTime
+  effectiveTo    DateTime?
+  createdAt      DateTime        @default(now())
+  updatedAt      DateTime        @updatedAt
+
+  program Program @relation(fields: [programId], references: [id])
+
+  @@index([programId, category, effectiveFrom])
+}
+
+model Scholarship {
+  id                   String    @id @default(uuid())
+  universityId         String
+  programId            String?
+  name                 String
+  amount               Decimal?
+  currency             String?
+  coveragePercent      Decimal?
+  eligibilityCriteria  String
+  applicationDeadline  DateTime?
+  deletedAt            DateTime?
+  createdAt            DateTime  @default(now())
+  updatedAt            DateTime  @updatedAt
+
+  university University @relation(fields: [universityId], references: [id])
+  program    Program?   @relation(fields: [programId], references: [id])
+}
+
+model UniversityMetadata {
+  id             String                   @id @default(uuid())
+  universityId   String                   @unique
+  source         String
+  sourceUrl      String?
+  verifiedAt     DateTime?
+  verifiedBy     String?
+  confidence     UniversityDataConfidence @default(MEDIUM)
+  lastReviewedAt DateTime?
+  createdAt      DateTime                 @default(now())
+  updatedAt      DateTime                 @updatedAt
+
+  university     University @relation(fields: [universityId], references: [id])
+  verifiedByUser User?      @relation("UniversityMetadataVerifier", fields: [verifiedBy], references: [id])
+}
+
+// ============================================================================
+// 6. Assessment & Matching Engine — docs/10-database-schema.md §7, docs/16-assessment-engine.md
+// ============================================================================
+
+enum AssessmentTriggeredBy {
+  STUDENT_REQUEST
+  PROFILE_UPDATE
+  ADMIN_REQUEST
+}
+
+enum AssessmentStatus {
+  PENDING
+  COMPLETED
+  FAILED
+}
+
+enum AssessmentRuleType {
+  THRESHOLD
+  WEIGHTED_FACTOR
+  PENALTY
+  BONUS
+}
+
+model Assessment {
+  id          String                @id @default(uuid())
+  profileId   String
+  triggeredBy AssessmentTriggeredBy
+  status      AssessmentStatus      @default(PENDING)
+  createdAt   DateTime              @default(now())
+  updatedAt   DateTime              @updatedAt
+
+  profile Profile          @relation(fields: [profileId], references: [id])
+  result  AssessmentResult?
+
+  @@index([profileId, status])
+}
+
+// Rules are admin-tunable config, not hardcoded logic (docs/16-assessment-engine.md).
+// Reproducibility relies on AssessmentSnapshot.rulesConfigSnapshot (JSON), not a live FK
+// from historical results back to this table — see docs/10-database-schema.md D4.
+model AssessmentRule {
+  id            String             @id @default(uuid())
+  key           String
+  version       Int
+  ruleType      AssessmentRuleType
+  config        Json
+  isActive      Boolean            @default(true)
+  effectiveFrom DateTime           @default(now())
+  effectiveTo   DateTime?
+  createdAt     DateTime           @default(now())
+  updatedAt     DateTime           @updatedAt
+
+  @@unique([key, version])
+}
+
+model AssessmentResult {
+  id                    String   @id @default(uuid())
+  assessmentId          String   @unique
+  profileId             String
+  matchingEngineVersion String
+  universityDataVersion String
+  rulesVersion          String
+  generatedAt           DateTime @default(now())
+  results               Json
+  createdAt             DateTime @default(now())
+  updatedAt             DateTime @updatedAt
+
+  assessment Assessment          @relation(fields: [assessmentId], references: [id])
+  snapshot   AssessmentSnapshot?
+}
+
+model AssessmentSnapshot {
+  id                  String   @id @default(uuid())
+  assessmentResultId  String   @unique
+  profileSnapshot     Json
+  answerSnapshotId    String
+  rulesConfigSnapshot Json
+  universityDataVersion String
+  createdAt           DateTime @default(now())
+  updatedAt           DateTime @updatedAt
+
+  assessmentResult AssessmentResult @relation(fields: [assessmentResultId], references: [id])
+  answerSnapshot   AnswerSnapshot   @relation(fields: [answerSnapshotId], references: [id])
+}
+
+// ============================================================================
+// 7. Commerce & Entitlements — docs/10-database-schema.md §8, docs/18-paywall-and-entitlements.md, docs/19
+// ============================================================================
+
+enum ProductType {
+  ONE_TIME
+  RECURRING
+}
+
+enum BillingInterval {
+  ONE_TIME
+  MONTHLY
+  YEARLY
+}
+
+enum SubscriptionStatus {
+  TRIALING
+  ACTIVE
+  PAST_DUE
+  CANCELED
+  EXPIRED
+}
+
+enum PurchaseStatus {
+  PENDING
+  COMPLETED
+  FAILED
+  REFUNDED
+}
+
+enum PaymentProvider {
+  STRIPE
+  PAYPAL
+}
+
+enum PaymentStatus {
+  REQUIRES_ACTION
+  SUCCEEDED
+  FAILED
+  REFUNDED
+  PARTIALLY_REFUNDED
+}
+
+enum EntitlementSourceType {
+  PURCHASE
+  SUBSCRIPTION
+  ADMIN_GRANT
+  PROMOTIONAL
+}
+
+enum WebhookProcessingStatus {
+  RECEIVED
+  PROCESSING
+  PROCESSED
+  FAILED
+}
+
+// Never a boolean flag on User/Profile — docs/54-decision-log.md D-4.
+model Product {
+  id       String      @id @default(uuid())
+  key      String      @unique
+  name     String
+  type     ProductType
+  isActive Boolean     @default(true)
+  createdAt DateTime   @default(now())
+  updatedAt DateTime   @updatedAt
+
+  prices       Price[]
+  entitlements Entitlement[]
+}
+
+model Price {
+  id              String           @id @default(uuid())
+  productId       String
+  amount          Decimal
+  currency        String
+  billingInterval BillingInterval?
+  isActive        Boolean          @default(true)
+  effectiveFrom   DateTime         @default(now())
+  effectiveTo     DateTime?
+  stripePriceId   String?
+  paypalPlanId    String?
+  createdAt       DateTime         @default(now())
+  updatedAt       DateTime         @updatedAt
+
+  product       Product        @relation(fields: [productId], references: [id])
+  purchases     Purchase[]
+  subscriptions Subscription[]
+
+  @@index([productId, currency, isActive])
+}
+
+model Customer {
+  id               String   @id @default(uuid())
+  userId           String   @unique
+  stripeCustomerId String?  @unique
+  paypalPayerId    String?  @unique
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+
+  user          User           @relation(fields: [userId], references: [id])
+  payments      Payment[]
+  subscriptions Subscription[]
+  purchases     Purchase[]
+  entitlements  Entitlement[]
+}
+
+model Subscription {
+  id                     String             @id @default(uuid())
+  customerId             String
+  priceId                String
+  status                 SubscriptionStatus @default(TRIALING)
+  currentPeriodStart     DateTime
+  currentPeriodEnd       DateTime
+  cancelAtPeriodEnd      Boolean            @default(false)
+  providerSubscriptionId String             @unique
+  createdAt              DateTime           @default(now())
+  updatedAt              DateTime           @updatedAt
+
+  customer     Customer      @relation(fields: [customerId], references: [id])
+  price        Price         @relation(fields: [priceId], references: [id])
+  entitlements Entitlement[]
+}
+
+model Purchase {
+  id         String         @id @default(uuid())
+  customerId String
+  priceId    String
+  status     PurchaseStatus @default(PENDING)
+  quantity   Int            @default(1)
+  createdAt  DateTime       @default(now())
+  updatedAt  DateTime       @updatedAt
+
+  customer     Customer      @relation(fields: [customerId], references: [id])
+  price        Price         @relation(fields: [priceId], references: [id])
+  payments     Payment[]
+  entitlements Entitlement[]
+
+  @@index([customerId, status])
+}
+
+// Never hard-deleted, never cascade-deleted from User — docs/10-database-schema.md §13.
+model Payment {
+  id                    String        @id @default(uuid())
+  purchaseId            String?
+  customerId            String
+  provider              PaymentProvider
+  providerTransactionId String        @unique
+  amount                Decimal
+  currency              String
+  status                PaymentStatus @default(REQUIRES_ACTION)
+  failureReason         String?
+  refundedAmount        Decimal?
+  createdAt             DateTime      @default(now())
+  updatedAt             DateTime      @updatedAt
+
+  purchase Purchase? @relation(fields: [purchaseId], references: [id])
+  customer Customer  @relation(fields: [customerId], references: [id])
+
+  @@index([customerId, status])
+}
+
+// The generic access grant — docs/54-decision-log.md D-4. scope is JSON (e.g. {assessmentId}).
+model Entitlement {
+  id                   String                @id @default(uuid())
+  customerId           String
+  productId            String
+  sourceType           EntitlementSourceType
+  sourcePurchaseId     String?
+  sourceSubscriptionId String?
+  scope                Json?
+  grantedAt            DateTime              @default(now())
+  expiresAt            DateTime?
+  revokedAt            DateTime?
+  revokedReason        String?
+  version              Int                   @default(1)
+  createdAt            DateTime              @default(now())
+  updatedAt            DateTime              @updatedAt
+
+  customer         Customer      @relation(fields: [customerId], references: [id])
+  product          Product       @relation(fields: [productId], references: [id])
+  sourcePurchase   Purchase?     @relation(fields: [sourcePurchaseId], references: [id])
+  sourceSubscription Subscription? @relation(fields: [sourceSubscriptionId], references: [id])
+
+  @@index([customerId, productId, revokedAt])
+}
+
+// No FK to Payment/Purchase by design — docs/10-database-schema.md D8.
+model WebhookEvent {
+  id               String                  @id @default(uuid())
+  provider         PaymentProvider
+  providerEventId  String
+  eventType        String
+  rawPayload       Json
+  receivedAt       DateTime                @default(now())
+  processedAt      DateTime?
+  processingStatus WebhookProcessingStatus @default(RECEIVED)
+  failureReason    String?
+  createdAt        DateTime                @default(now())
+  updatedAt        DateTime                @updatedAt
+
+  @@unique([provider, providerEventId])
+}
+
+// ============================================================================
+// 8. Applications — docs/10-database-schema.md §9, docs/21-application-management.md
+// ============================================================================
+
+// Canonical state machine — docs/31-state-machines.md §3, docs/54-decision-log.md D-8/D-13.
+enum ApplicationStatus {
+  DRAFT
+  READY_FOR_REVIEW
+  READY_TO_SUBMIT
+  SUBMITTED
+  UNDER_REVIEW
+  ADDITIONAL_INFORMATION_REQUIRED
+  OFFER_RECEIVED
+  REJECTED
+  WAITLISTED
+  OFFER_ACCEPTED
+  OFFER_DECLINED
+  WITHDRAWN
+}
+
+model Application {
+  id          String            @id @default(uuid())
+  studentId   String
+  programId   String
+  intakeId    String
+  status      ApplicationStatus @default(DRAFT)
+  submittedAt DateTime?
+  deletedAt   DateTime?
+  version     Int               @default(1)
+  createdAt   DateTime          @default(now())
+  updatedAt   DateTime          @updatedAt
+
+  student           User                       @relation("ApplicationStudent", fields: [studentId], references: [id])
+  program           Program                    @relation(fields: [programId], references: [id])
+  intake            Intake                     @relation(fields: [intakeId], references: [id])
+  snapshot          ApplicationSnapshot?
+  applicationDocuments ApplicationDocument[]
+  statusHistory     ApplicationStatusHistory[]
+
+  @@index([studentId, status])
+  @@index([programId, intakeId])
+}
+
+model ApplicationSnapshot {
+  id            String   @id @default(uuid())
+  applicationId String   @unique
+  capturedAt    DateTime @default(now())
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  application         Application                    @relation(fields: [applicationId], references: [id])
+  profileSnapshot     ApplicationProfileSnapshot?
+  documentSnapshots   ApplicationDocumentSnapshot[]
+  programSnapshot     ProgramSnapshot?
+  requirementSnapshots RequirementSnapshot[]
+}
+
+model ApplicationProfileSnapshot {
+  id                    String   @id @default(uuid())
+  applicationSnapshotId String   @unique
+  payload               Json
+  createdAt             DateTime @default(now())
+  updatedAt             DateTime @updatedAt
+
+  applicationSnapshot ApplicationSnapshot @relation(fields: [applicationSnapshotId], references: [id])
+}
+
+// Keeps a real FK to Document (unlike catalog snapshots) — docs/10-database-schema.md D9.
+model ApplicationDocumentSnapshot {
+  id                       String   @id @default(uuid())
+  applicationSnapshotId    String
+  documentId               String
+  versionNumberAtSubmission Int
+  s3KeyAtSubmission        String
+  checksumAtSubmission     String
+  reviewStatusAtSubmission String
+  createdAt                DateTime @default(now())
+  updatedAt                DateTime @updatedAt
+
+  applicationSnapshot ApplicationSnapshot @relation(fields: [applicationSnapshotId], references: [id])
+  document            Document            @relation(fields: [documentId], references: [id])
+
+  @@index([applicationSnapshotId])
+}
+
+model ProgramSnapshot {
+  id                    String   @id @default(uuid())
+  applicationSnapshotId String   @unique
+  programId             String
+  payload               Json
+  createdAt             DateTime @default(now())
+  updatedAt             DateTime @updatedAt
+
+  applicationSnapshot ApplicationSnapshot @relation(fields: [applicationSnapshotId], references: [id])
+}
+
+model RequirementSnapshot {
+  id                    String   @id @default(uuid())
+  applicationSnapshotId String
+  requirementType       String
+  payload               Json
+  createdAt             DateTime @default(now())
+  updatedAt             DateTime @updatedAt
+
+  applicationSnapshot ApplicationSnapshot @relation(fields: [applicationSnapshotId], references: [id])
+
+  @@index([applicationSnapshotId])
+}
+
+// Live, pre-submission working set — distinct from the frozen ApplicationDocumentSnapshot.
+model ApplicationDocument {
+  id                    String   @id @default(uuid())
+  applicationId         String
+  documentId            String
+  documentRequirementId String?
+  createdAt             DateTime @default(now())
+  updatedAt             DateTime @updatedAt
+
+  application           Application          @relation(fields: [applicationId], references: [id])
+  document              Document             @relation(fields: [documentId], references: [id])
+  documentRequirement   DocumentRequirement? @relation(fields: [documentRequirementId], references: [id])
+
+  @@unique([applicationId, documentId])
+}
+
+// Append-only — docs/10-database-schema.md §9.8.
+model ApplicationStatusHistory {
+  id            String   @id @default(uuid())
+  applicationId String
+  fromStatus    String?
+  toStatus      String
+  changedBy     String?
+  reason        String?
+  changedAt     DateTime @default(now())
+
+  application Application @relation(fields: [applicationId], references: [id])
+  changedByUser User?     @relation("ApplicationStatusActor", fields: [changedBy], references: [id])
+
+  @@index([applicationId, changedAt(sort: Desc)])
+}
+
+// ============================================================================
+// 9. Consultations — docs/10-database-schema.md §10, docs/22-consultation-booking.md
+// ============================================================================
+
+enum SlotStatus {
+  OPEN
+  HELD
+  BOOKED
+  CANCELED
+}
+
+// Canonical state machine — docs/31-state-machines.md §4.
+enum BookingStatus {
+  HELD
+  CONFIRMED
+  COMPLETED
+  CANCELED
+  NO_SHOW
+}
+
+model Consultant {
+  id                     String    @id @default(uuid())
+  userId                 String    @unique
+  bio                    String?
+  specialties            String[]
+  defaultSessionMinutes  Int       @default(40)
+  isAcceptingBookings    Boolean   @default(true)
+  deletedAt              DateTime?
+  createdAt              DateTime  @default(now())
+  updatedAt              DateTime  @updatedAt
+
+  user              User               @relation(fields: [userId], references: [id])
+  availabilitySlots AvailabilitySlot[]
+  bookings          Booking[]
+}
+
+model AvailabilitySlot {
+  id           String     @id @default(uuid())
+  consultantId String
+  startsAt     DateTime
+  endsAt       DateTime
+  status       SlotStatus @default(OPEN)
+  version      Int        @default(1)
+  createdAt    DateTime   @default(now())
+  updatedAt    DateTime   @updatedAt
+
+  consultant Consultant @relation(fields: [consultantId], references: [id])
+  booking    Booking?
+
+  @@unique([consultantId, startsAt])
+  @@index([consultantId, status, startsAt])
+}
+
+model Booking {
+  id            String        @id @default(uuid())
+  slotId        String        @unique
+  studentId     String
+  consultantId  String
+  status        BookingStatus @default(HELD)
+  holdExpiresAt DateTime?
+  meetingLink   String?
+  version       Int           @default(1)
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+
+  slot       AvailabilitySlot @relation(fields: [slotId], references: [id])
+  student    User             @relation("BookingStudent", fields: [studentId], references: [id])
+  consultant Consultant       @relation(fields: [consultantId], references: [id])
+
+  @@index([studentId, status])
+  @@index([consultantId, status])
+}
+
+// ============================================================================
+// 10. Notifications — docs/10-database-schema.md §11, docs/23-notification-system.md
+// ============================================================================
+
+enum NotificationChannel {
+  EMAIL
+  SMS
+  IN_APP
+  PUSH
+}
+
+enum NotificationStatus {
+  QUEUED
+  SENT
+  DELIVERED
+  FAILED
+  READ
+}
+
+model NotificationTemplate {
+  id              String              @id @default(uuid())
+  key             String
+  channel         NotificationChannel
+  subjectTemplate String?
+  bodyTemplate    String
+  isActive        Boolean             @default(true)
+  version         Int                 @default(1)
+  createdAt       DateTime            @default(now())
+  updatedAt       DateTime            @updatedAt
+
+  notifications Notification[]
+
+  @@unique([key, version])
+}
+
+model Notification {
+  id         String              @id @default(uuid())
+  userId     String
+  templateId String
+  channel    NotificationChannel
+  status     NotificationStatus  @default(QUEUED)
+  metadata   Json
+  sentAt     DateTime?
+  readAt     DateTime?
+  createdAt  DateTime            @default(now())
+  updatedAt  DateTime            @updatedAt
+
+  user     User                  @relation(fields: [userId], references: [id])
+  template NotificationTemplate  @relation(fields: [templateId], references: [id])
+
+  @@index([userId, status])
+  @@index([userId, readAt])
+}
+
+// ============================================================================
+// 11. Platform & Ops — docs/10-database-schema.md §12
+// ============================================================================
+
+enum AuditActorType {
+  STUDENT
+  ADMIN
+  SUPER_ADMIN
+  SYSTEM
+}
+
+// Append-only — no update, no delete, no deletedAt (docs/10-database-schema.md §12.1).
+model AuditLog {
+  id         String         @id @default(uuid())
+  actorId    String?
+  actorType  AuditActorType
+  action     String
+  entityType String
+  entityId   String
+  before     Json?
+  after      Json?
+  metadata   Json?
+  ipAddress  String?
+  createdAt  DateTime       @default(now())
+
+  actor User? @relation("AuditLogActor", fields: [actorId], references: [id])
+
+  @@index([entityType, entityId, createdAt(sort: Desc)])
+  @@index([actorId, createdAt(sort: Desc)])
+}
+
+model FeatureFlag {
+  id          String   @id @default(uuid())
+  key         String   @unique
+  description String
+  isEnabled   Boolean  @default(false)
+  rules       Json?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model SystemSetting {
+  id          String   @id @default(uuid())
+  key         String   @unique
+  value       Json
+  description String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
