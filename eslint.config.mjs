@@ -23,11 +23,15 @@ const eslintConfig = [
     // scripts/*.cjs are plain Node preload scripts loaded via NODE_OPTIONS before any
     // bundler/transpiler runs, so they must stay CommonJS — not part of the TS project.
     ignores: [
+      // Both build outputs: `.next` for build/start, `.next-dev` for the dev server
+      // (see distDir in next.config.ts). Neither is source.
       ".next/**",
+      ".next-dev/**",
       "node_modules/**",
       "prisma/generated/**",
       "scripts/**/*.cjs",
       ".dev-postgres/**",
+      ".dev-storage/**",
     ],
   },
 ];

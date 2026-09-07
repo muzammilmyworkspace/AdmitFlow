@@ -156,6 +156,36 @@ so the same assessment always previews the same programmes.
 `locked`, `placeholderId` and `zone`, verified by the `SEC-LEAK` checks after the change.
 The preview widens *who is visible*, never *what a locked entry reveals*.
 
+## D-18. `next dev` and `next build` get separate output directories
+
+**Context:** Running `npm run build` while a dev server was running killed the dev server
+with `Cannot find module './4447.js'`. The production build rewrites the chunk files in
+`.next/`, and the running dev server still holds references to the chunk names it compiled
+earlier. This bit twice during development, and the error is badly misleading — it names a
+missing module and produces a long framework stack trace, so it reads as a code fault
+rather than a clobbered directory.
+
+**Options:** (a) document "don't build while dev runs", (b) guard the build script by
+detecting a listening dev server, (c) give the two commands separate `distDir` values.
+
+**Chosen:** (c). `next.config.ts` reads `distDir: process.env.NEXT_DIST_DIR || ".next"`,
+and only the `dev` script sets `NEXT_DIST_DIR=.next-dev`.
+
+**Why this direction and not the reverse:** `build` and `start` keep the default `.next`,
+because deployment tooling expects exactly that path — moving the *production* output to
+make local development more convenient would trade a real deployment risk for a local
+annoyance. Only the dev server, which nothing external consumes, is relocated.
+
+**Why not (a):** a convention that has to be remembered is one that gets forgotten, and
+the failure it produces doesn't point at its own cause.
+
+**Follow-on fixes required by this change:** `.next-dev/` added to `.gitignore` and — less
+obviously — to the ESLint `ignores` list. Without the latter, `npm run lint` walked the new
+build output and reported 1,616 errors in generated code. The dev port is also pinned
+(`-p 3001`) so the URL stays stable and keeps matching `NEXT_PUBLIC_APP_URL`; otherwise
+Next silently picks the next free port and emailed verification links point at a server
+that isn't listening.
+
 ## D-15. `VerificationToken` table added (gap in the original ERD)
 
 **Context:** `12-api-contracts.md` §2 and `13-authentication-authorization.md` §3 both specify token-based email verification (single-use 256-bit link token, 24h) plus a 6-digit OTP (10 min, max 5 attempts), and a password-reset token (30 min) — but `10-database-schema.md`'s ERD has no table to store any of them. `Session` is the wrong home: these are pre-authentication, single-use, and have different lifetimes and attempt-counting semantics.

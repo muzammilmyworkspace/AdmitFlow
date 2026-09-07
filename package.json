@@ -4,7 +4,7 @@
   "private": true,
   "description": "AdmitFlow by SNZ Ventures — Say No to Consultants.",
   "scripts": {
-    "dev": "cross-env NODE_OPTIONS=\"--require ./scripts/win-legacy-junction-shim.cjs\" next dev",
+    "dev": "cross-env NEXT_DIST_DIR=.next-dev NODE_OPTIONS=\"--require ./scripts/win-legacy-junction-shim.cjs\" next dev -p 3001",
     "build": "cross-env NODE_OPTIONS=\"--require ./scripts/win-legacy-junction-shim.cjs\" next build",
     "start": "next start",
     "lint": "eslint .",

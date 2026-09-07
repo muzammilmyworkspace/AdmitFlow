@@ -46,3 +46,7 @@ tsconfig.tsbuildinfo
 
 # visual capture output (regenerate with: npx playwright test screenshots)
 /screenshots/
+
+# dev-server build output — kept separate from .next so `next build` can never
+# clobber a running `next dev` (see distDir in next.config.ts)
+/.next-dev/
