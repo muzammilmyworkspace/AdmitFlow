@@ -16,12 +16,22 @@ export const metadata: Metadata = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    // suppressHydrationWarning: browser extensions (translators, dark-mode tools, etc.)
-    // commonly inject attributes/classes onto <html> before React hydrates, which is a
-    // harmless false-positive mismatch, not an app bug — this only suppresses the warning
-    // for this one element, it does not disable hydration-mismatch checking elsewhere.
+    // Browser extensions decorate the document before React hydrates — Grammarly adds
+    // data-gr-ext-installed to <body>, translators and dark-mode tools add classes to
+    // <html> — and React reports each as a hydration mismatch even though nothing in the
+    // app produced it.
+    //
+    // Both elements need the flag: suppressHydrationWarning applies only to the element
+    // it is set on (its own attributes and text), and does NOT cascade to children. The
+    // <html> flag alone left the <body> mismatch still firing.
+    //
+    // The scope stays deliberately narrow — these two elements are the only ones
+    // extensions reliably touch, so genuine mismatches anywhere inside the app are still
+    // reported.
     <html lang="en" suppressHydrationWarning>
-      <body className="font-sans antialiased">{children}</body>
+      <body className="font-sans antialiased" suppressHydrationWarning>
+        {children}
+      </body>
     </html>
   );
 }
