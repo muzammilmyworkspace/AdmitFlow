@@ -4,6 +4,18 @@ import { ok, fail } from "@/lib/response";
 import { parseBody, requestIdOf } from "@/lib/api-route";
 import { requireVerifiedActor, requireOwnProfileId } from "@/lib/auth/guards";
 import {
+  assertDateOrder,
+  currencyCode,
+  dateOfBirth,
+  isoDate,
+  money,
+  optionalText,
+  pastDate,
+  phone,
+  shortText,
+  studyDate,
+} from "@/lib/validation";
+import {
   addEducation,
   addLanguageTest,
   completeOnboarding,
@@ -25,44 +37,48 @@ import {
 const stepSchema = z.discriminatedUnion("step", [
   z.object({
     step: z.literal("personal"),
-    firstName: z.string().min(1).max(100),
-    lastName: z.string().min(1).max(100),
-    dateOfBirth: z.string().nullish(),
-    phone: z.string().max(40).nullish(),
+    firstName: shortText(100, "First name"),
+    lastName: shortText(100, "Last name"),
+    dateOfBirth: dateOfBirth.nullish(),
+    phone: phone,
     nationalityCountryId: z.string().uuid().nullish(),
     currentCountryId: z.string().uuid().nullish(),
   }),
   z.object({
     step: z.literal("addEducation"),
     level: z.enum(["HIGH_SCHOOL", "BACHELORS", "MASTERS", "DOCTORATE", "OTHER"]),
-    institutionName: z.string().min(1).max(200),
+    institutionName: shortText(200, "Institution name"),
     countryId: z.string().uuid(),
-    fieldOfStudy: z.string().max(200).nullish(),
-    startDate: z.string().nullish(),
-    endDate: z.string().nullish(),
+    fieldOfStudy: optionalText(200),
+    startDate: studyDate.nullish(),
+    endDate: studyDate.nullish(),
     isCurrent: z.boolean().default(false),
     gradingScale: z.enum(["GPA_4", "GPA_5", "PERCENTAGE", "UK_HONOURS", "OTHER"]),
-    gradeValue: z.number().nullish(),
+    // Per-scale bounds are enforced in the service, which knows the scale; this only
+    // rules out values no scale could ever produce.
+    gradeValue: z.number().finite().min(0).max(1000).nullish(),
   }),
   z.object({ step: z.literal("deleteEducation"), educationId: z.string().uuid() }),
   z.object({
     step: z.literal("destination"),
     countryIds: z.array(z.string().uuid()).min(1).max(5),
-    targetIntake: z.string().max(60).nullish(),
+    targetIntake: optionalText(60),
   }),
   z.object({
     step: z.literal("budget"),
-    budgetMin: z.number().nonnegative().nullish(),
-    budgetMax: z.number().positive(),
-    currency: z.string().length(3),
+    budgetMin: money.nullish(),
+    budgetMax: money,
+    currency: currencyCode,
   }),
   z.object({
     step: z.literal("addLanguageTest"),
     testType: z.enum(["IELTS", "TOEFL", "PTE", "DUOLINGO", "CAMBRIDGE", "OTHER"]),
-    overallScore: z.number(),
-    sectionScores: z.record(z.string(), z.number()).optional(),
-    testDate: z.string(),
-    expiryDate: z.string().nullish(),
+    // Per-test ranges are enforced in the service; this rules out absurd input early.
+    overallScore: z.number().finite().min(0).max(1000),
+    sectionScores: z.record(z.string(), z.number().finite()).optional(),
+    // A test cannot have been sat in the future.
+    testDate: pastDate,
+    expiryDate: isoDate.nullish(),
   }),
   z.object({ step: z.literal("deleteLanguageTest"), testId: z.string().uuid() }),
   z.object({
@@ -73,7 +89,37 @@ const stepSchema = z.discriminatedUnion("step", [
     intakePreference: z.string().max(60).nullish(),
   }),
   z.object({ step: z.literal("complete") }),
-]);
+])
+  // Cross-field rules live here rather than on the individual members: a discriminated
+  // union only accepts plain object schemas, and .refine() turns a member into a
+  // ZodEffects that the union rejects.
+  .superRefine((value, ctx) => {
+    if (value.step === "addEducation" && !assertDateOrder(value.startDate, value.endDate)) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: ["endDate"],
+        message: "The end date cannot be before the start date.",
+      });
+    }
+    if (value.step === "addLanguageTest" && !assertDateOrder(value.testDate, value.expiryDate)) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: ["expiryDate"],
+        message: "The expiry date cannot be before the test date.",
+      });
+    }
+    if (
+      value.step === "budget" &&
+      value.budgetMin != null &&
+      value.budgetMin > value.budgetMax
+    ) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: ["budgetMin"],
+        message: "The minimum budget cannot exceed the maximum.",
+      });
+    }
+  });
 
 export async function GET(request: NextRequest) {
   const requestId = requestIdOf(request);

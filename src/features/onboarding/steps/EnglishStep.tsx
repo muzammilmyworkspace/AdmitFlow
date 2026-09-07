@@ -7,6 +7,7 @@ import { Select } from "@/components/ui/Select";
 import { FormField } from "@/components/ui/FormField";
 import { Alert } from "@/components/ui/Alert";
 import { Badge } from "@/components/ui/Badge";
+import { TODAY } from "@/features/onboarding/date-bounds";
 import type { StepProps } from "../OnboardingWizard";
 
 const TEST_TYPES = [
@@ -17,6 +18,16 @@ const TEST_TYPES = [
   ["CAMBRIDGE", "Cambridge English (80–230)"],
   ["OTHER", "Other (0–100)"],
 ] as const;
+
+// Mirrors LANGUAGE_TEST_RANGES in profile-service.
+const SCORE_RANGE: Record<string, [number, number]> = {
+  IELTS: [0, 9],
+  TOEFL: [0, 120],
+  PTE: [10, 90],
+  DUOLINGO: [10, 160],
+  CAMBRIDGE: [80, 230],
+  OTHER: [0, 100],
+};
 
 export function EnglishStep({ data, save, isSaving }: StepProps) {
   const [form, setForm] = useState({ testType: "IELTS", overallScore: "", testDate: "" });
@@ -95,10 +106,15 @@ export function EnglishStep({ data, save, isSaving }: StepProps) {
                 ))}
               </Select>
             </FormField>
-            <FormField label="Overall score">
+            <FormField
+              label="Overall score"
+              hint={`${(SCORE_RANGE[form.testType] ?? [0, 100])[0]} to ${(SCORE_RANGE[form.testType] ?? [0, 100])[1]}`}
+            >
               <Input
                 type="number"
                 step="0.5"
+                min={(SCORE_RANGE[form.testType] ?? [0, 100])[0]}
+                max={(SCORE_RANGE[form.testType] ?? [0, 100])[1]}
                 value={form.overallScore}
                 onChange={(e) => setForm({ ...form, overallScore: e.target.value })}
                 required
@@ -107,6 +123,7 @@ export function EnglishStep({ data, save, isSaving }: StepProps) {
             <FormField label="Test date">
               <Input
                 type="date"
+                max={TODAY}
                 value={form.testDate}
                 onChange={(e) => setForm({ ...form, testDate: e.target.value })}
                 required

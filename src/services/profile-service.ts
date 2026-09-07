@@ -258,7 +258,7 @@ function validateLanguageScore(testType: LanguageTestType, score: number) {
   if (score < min || score > max) {
     throw new AppError(
       "VALIDATION_ERROR",
-      `A ${testType} score of ${score} is outside the valid range (${min}–${max}).`,
+      `${testType} scores run from ${min} to ${max} — ${score} is outside that range.`,
     );
   }
 }

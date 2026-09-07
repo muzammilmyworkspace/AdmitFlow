@@ -292,6 +292,36 @@ HUGE=$(curl -s "$BASE/api/v1/programs?pageSize=100000")
 assert_contains "an unbounded page size is capped" '"pageSize":50' "$HUGE"
 
 # =============================================================================
+section "13. Input validation"
+# A student typing a five-digit year into the date picker found this: the field took it,
+# and the validator then crashed on it, so the answer was a 500 rather than "enter a real
+# date". Every case below must come back 400 VALIDATION_ERROR — a 500 here means bad input
+# is reaching code that assumed it was already clean.
+bad_input() { # bad_input <name> <body>
+  local body code
+  body=$(api "$jarA" PATCH /api/v1/onboarding "$2")
+  code=$(echo "$body" | grep -o '"code":"[A-Z_]*"' | head -1 | cut -d'"' -f4)
+  assert_eq "$1" "VALIDATION_ERROR" "$code"
+}
+bad_input "DOB with a five-digit year is refused"  '{"step":"personal","firstName":"A","lastName":"B","dateOfBirth":"99999-01-01"}'
+bad_input "DOB of 31 February is refused"          '{"step":"personal","firstName":"A","lastName":"B","dateOfBirth":"2002-02-31"}'
+bad_input "DOB in the future is refused"           '{"step":"personal","firstName":"A","lastName":"B","dateOfBirth":"2030-01-01"}'
+bad_input "a blank name is refused"                '{"step":"personal","firstName":"   ","lastName":"B"}'
+bad_input "a phone number with letters is refused" '{"step":"personal","firstName":"A","lastName":"B","phone":"call-me"}'
+bad_input "a stray-zero budget is refused"         '{"step":"budget","budgetMax":9000000000000000,"currency":"EUR"}'
+bad_input "a zero budget is refused"               '{"step":"budget","budgetMax":0,"currency":"EUR"}'
+bad_input "a budget minimum above its maximum is refused" '{"step":"budget","budgetMin":50000,"budgetMax":10000,"currency":"EUR"}'
+bad_input "a five-letter currency is refused"      '{"step":"budget","budgetMax":10000,"currency":"EUROS"}'
+bad_input "a test sat in the future is refused"    '{"step":"addLanguageTest","testType":"IELTS","overallScore":7,"testDate":"2030-01-01"}'
+bad_input "an out-of-range IELTS score is refused" '{"step":"addLanguageTest","testType":"IELTS","overallScore":47,"testDate":"2026-03-01"}'
+bad_input "an expiry before the test date is refused" '{"step":"addLanguageTest","testType":"IELTS","overallScore":7,"testDate":"2026-03-01","expiryDate":"2020-01-01"}'
+
+# The account must still be usable afterwards: rejecting bad input must not have written
+# a partial profile.
+VALID_AFTER=$(api "$jarA" PATCH /api/v1/onboarding '{"step":"personal","firstName":"E2E","lastName":"User","dateOfBirth":"2002-01-01"}')
+assert_contains "a valid save still succeeds after the rejections" '"success":true' "$VALID_AFTER"
+
+# =============================================================================
 printf "\n\033[1mResults\033[0m\n"
 printf "  passed: \033[32m%d\033[0m\n" "$PASS"
 printf "  failed: \033[31m%d\033[0m\n" "$FAIL"

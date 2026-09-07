@@ -8,6 +8,7 @@ import { Checkbox } from "@/components/ui/Checkbox";
 import { FormField } from "@/components/ui/FormField";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { Badge } from "@/components/ui/Badge";
+import { STUDY_DATE_RANGE } from "@/features/onboarding/date-bounds";
 import type { StepProps } from "../OnboardingWizard";
 
 const LEVELS = [
@@ -25,6 +26,16 @@ const SCALES = [
   ["UK_HONOURS", "UK honours (0–100)"],
   ["OTHER", "Other (0–100)"],
 ] as const;
+
+// Mirrors validateGrade() in profile-service so the picker cannot offer a value the
+// server will reject.
+const SCALE_MAX: Record<string, number> = {
+  GPA_4: 4,
+  GPA_5: 5,
+  PERCENTAGE: 100,
+  UK_HONOURS: 100,
+  OTHER: 100,
+};
 
 const EMPTY_FORM = {
   level: "BACHELORS",
@@ -163,10 +174,15 @@ export function EducationStep({ data, countries, save, isSaving }: StepProps) {
                 ))}
               </Select>
             </FormField>
-            <FormField label="Your grade">
+            <FormField
+              label="Your grade"
+              hint={`0 to ${SCALE_MAX[form.gradingScale] ?? 100}`}
+            >
               <Input
                 type="number"
                 step="0.01"
+                min={0}
+                max={SCALE_MAX[form.gradingScale] ?? 100}
                 value={form.gradeValue}
                 onChange={(e) => setForm({ ...form, gradeValue: e.target.value })}
                 required
@@ -178,6 +194,8 @@ export function EducationStep({ data, countries, save, isSaving }: StepProps) {
             <FormField label="Start date" hint="Optional">
               <Input
                 type="date"
+                min={STUDY_DATE_RANGE.min}
+                max={STUDY_DATE_RANGE.max}
                 value={form.startDate}
                 onChange={(e) => setForm({ ...form, startDate: e.target.value })}
               />
@@ -185,6 +203,8 @@ export function EducationStep({ data, countries, save, isSaving }: StepProps) {
             <FormField label="End date" hint="Leave blank if ongoing">
               <Input
                 type="date"
+                min={STUDY_DATE_RANGE.min}
+                max={STUDY_DATE_RANGE.max}
                 value={form.endDate}
                 onChange={(e) => setForm({ ...form, endDate: e.target.value })}
               />

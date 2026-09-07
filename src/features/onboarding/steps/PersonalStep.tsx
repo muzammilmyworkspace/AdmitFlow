@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
 import { Select } from "@/components/ui/Select";
 import { FormField } from "@/components/ui/FormField";
+import { DOB_RANGE } from "@/features/onboarding/date-bounds";
 import type { StepProps } from "../OnboardingWizard";
 
 export function PersonalStep({ data, countries, save, isSaving }: StepProps) {
@@ -48,7 +49,13 @@ export function PersonalStep({ data, countries, save, isSaving }: StepProps) {
 
       <div className="grid gap-x-4 sm:grid-cols-2">
         <FormField label="Date of birth">
-          <Input type="date" value={values.dateOfBirth} onChange={update("dateOfBirth")} />
+          <Input
+            type="date"
+            value={values.dateOfBirth}
+            onChange={update("dateOfBirth")}
+            min={DOB_RANGE.min}
+            max={DOB_RANGE.max}
+          />
         </FormField>
         <FormField label="Phone" hint="Optional">
           <Input value={values.phone} onChange={update("phone")} />
