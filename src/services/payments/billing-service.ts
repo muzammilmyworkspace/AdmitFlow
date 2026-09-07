@@ -25,6 +25,52 @@ export interface CheckoutRequest {
 }
 
 /**
+ * Checks that a scope the client supplied actually refers to something that client owns.
+ *
+ * Without this, `scope` is whatever the browser sent. Two things go wrong. A client bug
+ * that sends the wrong id of the right shape (a result id where an assessment id belongs,
+ * say) produces a grant that no entitlement check will ever match — the student pays and
+ * receives nothing, silently, with a successful payment on record. And a deliberate
+ * caller could scope a purchase to another student’s assessment. Both become a 400 here.
+ */
+async function assertScopeBelongsToUser(
+  userId: string,
+  scope: CheckoutRequest["scope"],
+): Promise<void> {
+  if (!scope) return;
+
+  if (scope.assessmentId) {
+    const assessment = await db.assessment.findUnique({
+      where: { id: scope.assessmentId },
+      select: { profile: { select: { userId: true } } },
+    });
+    if (assessment?.profile.userId !== userId) {
+      throw new AppError("VALIDATION_ERROR", "That assessment is not yours to buy against.");
+    }
+  }
+
+  if (scope.applicationId) {
+    const application = await db.application.findUnique({
+      where: { id: scope.applicationId },
+      select: { studentId: true },
+    });
+    if (application?.studentId !== userId) {
+      throw new AppError("VALIDATION_ERROR", "That application is not yours to buy against.");
+    }
+  }
+
+  if (scope.bookingId) {
+    const booking = await db.booking.findUnique({
+      where: { id: scope.bookingId },
+      select: { studentId: true },
+    });
+    if (booking?.studentId !== userId) {
+      throw new AppError("VALIDATION_ERROR", "That booking is not yours to buy against.");
+    }
+  }
+}
+
+/**
  * Creates a Purchase and a provider checkout session.
  *
  * The price is resolved server-side from the Product/Price tables — a client-supplied
@@ -40,6 +86,9 @@ export async function createCheckout(request: CheckoutRequest) {
   }
   const price = product.prices[0];
   if (!price) throw new AppError("RESOURCE_NOT_FOUND", "That product has no active price.");
+
+  // Before a Purchase row exists, so a bad scope never reaches the provider.
+  await assertScopeBelongsToUser(request.userId, request.scope);
 
   const customer = await getOrCreateCustomer(request.userId);
 

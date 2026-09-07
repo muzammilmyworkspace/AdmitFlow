@@ -26,6 +26,7 @@ export const PERMISSIONS = {
   PAYMENT_REFUND: "payment:refund",
   UNIVERSITY_MANAGE: "university:manage",
   ASSESSMENT_RULES_PUBLISH: "assessment_rules:publish",
+  ASSESSMENT_REVIEW_DELIVER: "assessment_review:deliver",
   AUDIT_LOG_READ: "audit_log:read",
   ADMIN_IMPERSONATE: "admin:impersonate",
   FEATURE_FLAG_MANAGE: "feature_flag:manage",
@@ -38,7 +39,8 @@ export type PermissionKey = (typeof PERMISSIONS)[keyof typeof PERMISSIONS];
 // this is only the deterministic seed input (docs/37-seed-data-strategy.md).
 export const DEFAULT_ROLE_PERMISSIONS: Record<SystemRole, PermissionKey[]> = {
   STUDENT: [],
-  CONSULTANT: [],
+  // The consultant role exists to deliver the paid human review of an assessment.
+  CONSULTANT: [PERMISSIONS.ASSESSMENT_REVIEW_DELIVER],
   ADMIN: [
     PERMISSIONS.DOCUMENT_REVIEW,
     PERMISSIONS.DOCUMENT_DOWNLOAD_ANY,
@@ -46,6 +48,7 @@ export const DEFAULT_ROLE_PERMISSIONS: Record<SystemRole, PermissionKey[]> = {
     PERMISSIONS.APPLICATION_STATUS_OVERRIDE,
     PERMISSIONS.UNIVERSITY_MANAGE,
     PERMISSIONS.AUDIT_LOG_READ,
+    PERMISSIONS.ASSESSMENT_REVIEW_DELIVER,
   ],
   SUPER_ADMIN: Object.values(PERMISSIONS),
 };

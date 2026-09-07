@@ -50,6 +50,12 @@ async function seedProducts() {
     { key: "TARGET_UNLOCK", name: "TARGET & SAFE Results Unlock", amount: 9.99, currency: "EUR" },
     { key: "APPLICATION_FEE", name: "Application Submission Fee", amount: 15.0, currency: "EUR" },
     { key: "CONSULTATION_40MIN", name: "40-Minute Consultation", amount: 30.0, currency: "EUR" },
+    {
+      key: "ASSESSMENT_REVIEW",
+      name: "Consultant Review of Your Assessment",
+      amount: 10.0,
+      currency: "EUR",
+    },
   ];
 
   for (const p of products) {

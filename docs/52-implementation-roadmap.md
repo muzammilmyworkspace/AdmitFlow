@@ -163,10 +163,15 @@ traces never reach the client. Every endpoint validates its input with a schema.
 
 ## Phase 19 — Testing ✅ complete
 
-62 unit tests, a 54-check API suite, and 5 Playwright browser specs. The browser suite
-caught the empty-free-tier bug that the API suite had missed, and three of my own test bugs
-were found and fixed — two of which meant IDOR and double-booking were passing on a guard
-that fired before the check they existed to test.
+108 unit tests, a 67-check API suite, a 27-check consultant-review suite, and 12 Playwright
+browser specs. The browser suite caught the empty-free-tier bug that the API suite had
+missed, and three of my own test bugs were found and fixed — two of which meant IDOR and
+double-booking were passing on a guard that fired before the check they existed to test.
+
+Unit tests run sequentially (fileParallelism: false): in parallel, several workers each
+transform the Prisma client at once and time out fetching their own module graph, which
+is reported as failed files with zero failed assertions — a thoroughly misleading way to
+learn the machine is busy.
 
 ## Phase 20 — Production Readiness 🚧 partial
 
@@ -177,3 +182,46 @@ Outstanding before real users: the blocking items in `55-known-risks-and-open-qu
 (legal review of compliance and outcome-language claims, a malware-scanning vendor, exact
 brand-colour sampling, subprocessor list), plus real Redis, real S3, real payment
 credentials, a job scheduler, and an accessibility pass with actual screen readers.
+
+---
+
+## Post-Phase-20 work
+
+### Input validation hardened
+
+A student typing a five-digit year into the date-of-birth picker had it accepted by the
+browser, accepted by the schema, and rejected only where something downstream called
+`.getTime()` on it — so the answer was a 500. `src/lib/validation.ts` is now the single
+home for these rules: exact `YYYY-MM-DD` parsing that rejects impossible calendar dates
+and out-of-century years, age-bounded dates of birth, past-only test dates, a study-date
+horizon, a typo-catching budget ceiling, and trimmed, bounded free text. The wizard's
+inputs carry matching `min`/`max` attributes computed from the same constants, so the two
+cannot drift. `scripts/e2e.sh` §13 asserts each case returns 400, never 500.
+
+### Matches redesigned as a comparison grid — D-19
+
+Three cards across on desktop, with locked matches rendered as cards in the same grid, so
+a student can see the shape of what they are missing beside what they can already read.
+The locked cards are drawn from `{ locked, placeholderId, zone }` and nothing else — D-19
+records why a blur over real data was rejected. `e2e/matches.spec.ts` asserts both the
+grid and the invariant, checking every programme id in the delivered document against the
+set the viewer is entitled to.
+
+### Consultant assessment review — D-20
+
+A €10 written review of one assessment: sold as a product granting a scoped entitlement,
+requested by the student, and delivered by a consultant through a work queue.
+`scripts/review-e2e.sh` walks the whole path — the offer, the 402 for an unpaid request,
+purchase, request, claim, delivery, and the boundaries around who may read the result.
+
+Building it surfaced a gap in checkout that was not specific to this product: `scope` was
+stored exactly as the client sent it, unvalidated. A client bug sending a well-formed but
+wrong id — which happened during this work — produces an entitlement that no check will
+ever match, so the student pays and receives nothing, with a successful payment on record.
+`createCheckout` now verifies that a supplied `assessmentId`, `applicationId` or
+`bookingId` belongs to the caller.
+
+**Still outstanding:** consultants have no UI of their own. The queue is API-only
+(`GET`/`PATCH /api/v1/admin/assessment-reviews`), so a review is delivered today by an
+admin or consultant calling that endpoint directly. A queue screen is the obvious next
+piece of work.

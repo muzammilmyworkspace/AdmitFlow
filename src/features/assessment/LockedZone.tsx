@@ -1,10 +1,7 @@
 "use client";
 
-import { useState } from "react";
 import { Check, Lock, Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/Button";
-import { Alert } from "@/components/ui/Alert";
-import { apiPost, ApiError } from "@/lib/api-client";
 import { GlowField } from "@/components/brand/WorldMotif";
 
 // The paywall surface.
@@ -22,36 +19,22 @@ const INCLUDED = [
 ];
 
 export function LockedZone({
-  assessmentId,
   targetCount,
   safeCount,
   visibleCount,
+  onUnlock,
+  isStarting,
 }: {
-  assessmentId: string;
   targetCount: number;
   safeCount: number;
   /** How many matches the student can already read, so the copy can't overstate. */
   visibleCount: number;
+  // Checkout lives in the parent so that this panel and every locked card start the same
+  // purchase, and a failure from either surfaces in one place.
+  onUnlock: () => void;
+  isStarting: boolean;
 }) {
-  const [error, setError] = useState<string | null>(null);
-  const [isStarting, setIsStarting] = useState(false);
   const total = targetCount + safeCount;
-
-  async function startCheckout() {
-    if (isStarting) return;
-    setIsStarting(true);
-    setError(null);
-    try {
-      const result = await apiPost<{ checkoutUrl: string }>("/api/v1/billing/checkout", {
-        productKey: "TARGET_UNLOCK",
-        assessmentId,
-      });
-      window.location.href = result.checkoutUrl;
-    } catch (err) {
-      setError(err instanceof ApiError ? err.message : "Could not start checkout.");
-      setIsStarting(false);
-    }
-  }
 
   if (total === 0) return null;
 
@@ -91,14 +74,8 @@ export function LockedZone({
           <p className="text-sm text-white/60">One-off, for this assessment</p>
           <p className="mt-1 text-4xl font-semibold tracking-tight">€9.99</p>
 
-          {error && (
-            <Alert tone="error" className="mt-4 text-left">
-              {error}
-            </Alert>
-          )}
-
           <Button
-            onClick={startCheckout}
+            onClick={onUnlock}
             isLoading={isStarting}
             size="lg"
             variant="secondary"

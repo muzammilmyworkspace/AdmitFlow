@@ -100,6 +100,21 @@ const CATALOG: EventTemplates[] = [
     },
   },
   {
+    event: "ASSESSMENT_REVIEW_READY",
+    email: {
+      subject: "A consultant has reviewed your assessment",
+      body: [
+        "<p>Hi {{firstName}},</p>",
+        "<p>One of our consultants has finished going through your assessment and written back to you.</p>",
+        '<p><a href="{{resultsUrl}}">Read the review</a></p>',
+      ].join("\n"),
+    },
+    inApp: {
+      title: "Your consultant review is ready",
+      body: "A consultant has read your assessment and written back. Open your results to read it.",
+    },
+  },
+  {
     event: "ASSESSMENT_READY",
     email: {
       subject: "Your admission assessment is ready",

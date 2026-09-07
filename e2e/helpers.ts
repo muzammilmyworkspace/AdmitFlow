@@ -42,7 +42,10 @@ export async function signUpAndVerify(page: Page, email: string): Promise<void> 
 
   const token = latestVerificationToken();
   await page.goto(`/verify-email?token=${token}`);
-  await page.waitForURL(/dashboard/, { timeout: 20_000 });
+  // Generous, because it has to be: the dev server compiles routes on first hit and
+  // argon2 hashing is deliberately slow, so a cold sign-up can take well over a minute.
+  // A tight bound here fails on server warm-up rather than on anything about the product.
+  await page.waitForURL(/dashboard/, { timeout: 90_000 });
 }
 
 /**

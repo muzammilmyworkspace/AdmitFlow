@@ -177,7 +177,7 @@ describe("shortText", () => {
   it("names the field in its message", () => {
     const result = name.safeParse("");
     expect(result.success).toBe(false);
-    if (!result.success) expect(result.error.issues[0].message).toContain("First name");
+    if (!result.success) expect(result.error.issues[0]?.message).toContain("First name");
   });
 });
 

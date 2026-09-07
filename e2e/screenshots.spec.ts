@@ -1,4 +1,4 @@
-import { test } from "@playwright/test";
+import { expect, test } from "@playwright/test";
 import { completeOnboarding, signUpAndVerify, uniqueEmail } from "./helpers";
 
 // Visual capture pass. Not assertions — this exists so the UI can actually be looked at
@@ -29,6 +29,9 @@ test.describe("Visual capture", () => {
   });
 
   test("authenticated surfaces", async ({ page }) => {
+    // Sign-up, the full onboarding wizard and an assessment run, in one test — well past
+    // the 60s default.
+    test.setTimeout(600_000);
     await page.setViewportSize({ width: 1440, height: 900 });
     const email = uniqueEmail("shot");
 
@@ -48,7 +51,11 @@ test.describe("Visual capture", () => {
 
     await page.goto("/dashboard/assessment");
     await page.getByRole("button", { name: /Run my assessment/ }).click();
-    await page.waitForTimeout(4000);
+    // Wait for the results themselves: a fixed delay captured the loading state instead.
+    await expect(page.getByRole("heading", { name: /programmes matched/ })).toBeVisible({
+      timeout: 60_000,
+    });
+    await page.waitForTimeout(800);
     await page.screenshot({ path: "screenshots/08-matches.png", fullPage: true });
 
     await page.goto("/dashboard/universities");

@@ -60,6 +60,8 @@ model User {
   applicationStatusChanges ApplicationStatusHistory[] @relation("ApplicationStatusActor")
 
   bookingsAsStudent       Booking[]             @relation("BookingStudent")
+  assessmentReviewsRequested AssessmentReview[] @relation("AssessmentReviewStudent")
+  assessmentReviewsAssigned  AssessmentReview[] @relation("AssessmentReviewReviewer")
 
   customer                Customer?
 
@@ -907,6 +909,7 @@ model AssessmentResult {
 
   assessment Assessment          @relation(fields: [assessmentId], references: [id])
   snapshot   AssessmentSnapshot?
+  review     AssessmentReview?
 }
 
 model AssessmentSnapshot {
@@ -921,6 +924,45 @@ model AssessmentSnapshot {
 
   assessmentResult AssessmentResult @relation(fields: [assessmentResultId], references: [id])
   answerSnapshot   AnswerSnapshot   @relation(fields: [answerSnapshotId], references: [id])
+}
+
+// A consultant's human read of an automated assessment. The engine explains its scoring,
+// but it cannot tell a student which of three good options actually suits them, so this
+// is sold separately (docs/18-paywall-and-entitlements.md) and delivered by a person.
+//
+// The row is only ever created once the ASSESSMENT_REVIEW entitlement exists for the
+// assessment in question — payment -> webhook -> entitlement -> row, never the reverse.
+enum AssessmentReviewStatus {
+  REQUESTED
+  IN_REVIEW
+  COMPLETED
+  CANCELED
+}
+
+model AssessmentReview {
+  id                 String                 @id @default(uuid())
+  assessmentResultId String
+  profileId          String
+  studentId          String
+  reviewerId         String?
+  status             AssessmentReviewStatus @default(REQUESTED)
+  // What the student wants a second opinion on. Their words, shown to the reviewer.
+  studentNote        String?
+  // The reviewer's written answer. Only ever readable by its student and staff.
+  reviewerNotes      String?
+  claimedAt          DateTime?
+  completedAt        DateTime?
+  createdAt          DateTime               @default(now())
+  updatedAt          DateTime               @updatedAt
+
+  assessmentResult AssessmentResult @relation(fields: [assessmentResultId], references: [id])
+  student          User             @relation("AssessmentReviewStudent", fields: [studentId], references: [id])
+  reviewer         User?            @relation("AssessmentReviewReviewer", fields: [reviewerId], references: [id])
+
+  // One paid review per assessment result: a second purchase is a second assessment.
+  @@unique([assessmentResultId])
+  @@index([status, createdAt])
+  @@index([studentId, status])
 }
 
 // ============================================================================
@@ -1406,6 +1448,7 @@ model Notification {
 
 enum AuditActorType {
   STUDENT
+  CONSULTANT
   ADMIN
   SUPER_ADMIN
   SYSTEM

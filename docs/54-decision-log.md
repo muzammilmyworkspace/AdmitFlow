@@ -216,3 +216,79 @@ that isn't listening.
 **Context:** The 2026-09-06 build-authorization message's §26 gives a shorter Application status list that both omits states already decided as necessary (`WAITLISTED`, `OFFER_ACCEPTED`, `OFFER_DECLINED` — needed to support the future `APPLICATION_REVIEWER` role and post-offer flows already described in `01-product-requirements.md`/`02-personas-and-roles.md`) and uses slightly different names for existing ones (`READY_FOR_SUBMISSION` vs. canonical `READY_TO_SUBMIT`).
 **Chosen:** Canonical list from D-8/`31-state-machines.md` governs. The build-authorization message's list is treated as a plain-language restatement of intent, not a contradiction requiring a new decision — the message's own priority order (security/data-integrity/approved-architecture above restated business requirements) supports keeping one canonical source rather than forking it.
 **Future implications:** No document should introduce a third variant of this state machine. If a future requirement genuinely needs a different lifecycle, it must be proposed as an update to `31-state-machines.md` directly, with this log updated accordingly.
+
+---
+
+## D-19. A locked match is drawn from its placeholder, never from blurred real data
+
+**Context:** The matches page was redesigned so that locked matches appear as cards in the
+same grid as readable ones, rather than only as a count in a panel underneath. The obvious
+way to build that — render the real card and put a CSS blur over it — is the one way it
+must not be built.
+
+**Options:** (a) send the real programme and blur it client-side, (b) send a redacted
+subset (university name but no fee, say), (c) send only what the projection already emits
+for a locked entry and draw the card from that.
+
+**Chosen:** (c). `LockedMatchCard` receives exactly `{ locked, placeholderId, zone }` —
+the whole of what `projectResultsForUser` emits for a locked result (D-5) — and renders
+placeholder bars whose widths are hashed from the placeholder id.
+
+**Why:** A blur is decoration over data that is already in the document; devtools removes
+it in seconds, and so does "view source". (b) fails for the same reason more slowly: a
+university name is most of what the student is paying to learn. The lock is only real
+because the data is genuinely absent from the response.
+
+**Why hashed widths rather than random ones:** `Math.random()` produces different widths on
+the server and the client, which is a hydration mismatch, and bars that reshuffle on every
+re-render read as a broken interface rather than a locked one.
+
+**What the student is still told:** the zone (`Strong match` / `Good match`), because the
+projection already sends it and it is the honest part — the student learns the calibre of
+what is behind the lock without learning which university it is.
+
+**Tradeoffs:** The locked cards carry no information beyond their zone, so they are
+repetitive by construction. Capped at three per zone (`LOCKED_PREVIEW_PER_ZONE`) with the
+remainder given as a count, because forty identical locked cards is noise, not persuasion.
+
+**Future implications:** `e2e/matches.spec.ts` asserts that a locked entry has exactly
+those three keys, so adding a field to `LockedResult` "just for the UI" fails a test
+rather than quietly widening the paywall.
+
+## D-20. The consultant assessment review is sold as an entitlement, delivered as a row
+
+**Context:** The product needed a paid human read of an automated assessment (€10) — the
+engine can explain how it scored a programme, but not which of three good options suits a
+particular student.
+
+**Options:** (a) a boolean `hasReview` on the assessment, (b) reuse the existing
+`CONSULTATION_40MIN` booking flow, (c) a new product granting a new entitlement, plus an
+`AssessmentReview` row created only after the entitlement exists.
+
+**Chosen:** (c). `ASSESSMENT_REVIEW` product → `ASSESSMENT_REVIEW` entitlement scoped to
+the assessment → `requestReview()` checks the ledger and creates the row.
+
+**Why not (a):** the same reason D-4 exists — a boolean cannot express refunds, admin
+grants, expiry or scope without a migration each time.
+
+**Why not (b):** a booking is a scheduled 40-minute call against a consultant's
+availability. This is asynchronous written work with no slot, so it would have meant
+either fake availability rows or a booking that never meets.
+
+**Ordering, which is the security-relevant part:** pay → provider webhook → entitlement →
+row. `requestReview()` takes no parameter by which a caller can assert that payment
+happened; it reads `hasEntitlement()` and nothing else. `scripts/review-e2e.sh` asserts the
+unpaid request is refused with 402 at the API, not merely hidden in the UI.
+
+**Two smaller decisions inside it:** a reviewer's notes are withheld from the student until
+the review is `COMPLETED` (a working draft is not the deliverable), and claiming is a
+conditional `updateMany` rather than read-then-write, so two consultants opening the queue
+at the same moment cannot both believe they own the same review.
+
+**Tradeoffs:** One review per assessment result, enforced by a unique index — a student
+wanting a second opinion re-runs the assessment. Simpler than modelling review rounds, and
+revisitable if students actually ask for it.
+
+**Future implications:** `CONSULTANT` now carries a real permission
+(`assessment_review:deliver`) rather than being an empty bundle, and `AuditActorType` gained
+`CONSULTANT` so their actions are distinguishable from an admin's in the audit trail.

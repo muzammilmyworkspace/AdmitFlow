@@ -10,7 +10,12 @@ import { createCheckout } from "@/services/payments/billing-service";
 // No amount is accepted from the client; the price is resolved server-side.
 
 const schema = z.object({
-  productKey: z.enum(["TARGET_UNLOCK", "APPLICATION_FEE", "CONSULTATION_40MIN"]),
+  productKey: z.enum([
+    "TARGET_UNLOCK",
+    "APPLICATION_FEE",
+    "CONSULTATION_40MIN",
+    "ASSESSMENT_REVIEW",
+  ]),
   assessmentId: z.string().uuid().optional(),
   applicationId: z.string().uuid().optional(),
   bookingId: z.string().uuid().optional(),
