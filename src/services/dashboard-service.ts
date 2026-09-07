@@ -29,6 +29,8 @@ export interface NextAction {
 
 export interface DashboardSummary {
   accountStatus: string;
+  /** The student's own first name, for the greeting. Null before onboarding fills it. */
+  firstName: string | null;
   journey: JourneyStage[];
   nextAction: NextAction | null;
   counts: {
@@ -75,6 +77,9 @@ export async function getDashboardSummary(
 
   const onboarding = profileId ? await getOnboardingStatus(profileId) : null;
   const assessmentRow = profileId ? await getLatestAssessment(profileId) : null;
+  const profile = profileId
+    ? await db.profile.findUnique({ where: { id: profileId }, select: { firstName: true } })
+    : null;
 
   const verifiedTypes = new Set(
     documents.filter((d) => d.status === "VERIFIED").map((d) => d.type),
@@ -120,6 +125,7 @@ export async function getDashboardSummary(
 
   return {
     accountStatus,
+    firstName: profile?.firstName?.trim() || null,
     journey,
     nextAction: pickNextAction(journey, counts),
     counts,

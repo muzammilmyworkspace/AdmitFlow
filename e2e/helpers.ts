@@ -1,6 +1,6 @@
 import { execSync } from "node:child_process";
 import { readFileSync } from "node:fs";
-import type { Page } from "@playwright/test";
+import { expect, type Page } from "@playwright/test";
 
 export const PASSWORD = "CorrectHorse42!";
 const DEV_LOG = process.env.DEV_LOG ?? "/tmp/dev.log";
@@ -33,11 +33,11 @@ export function latestVerificationToken(): string {
 /** Signs up through the real form, then verifies via the emailed link. */
 export async function signUpAndVerify(page: Page, email: string): Promise<void> {
   await page.goto("/signup");
-  await page.getByLabel("First name").fill("Browser");
-  await page.getByLabel("Last name").fill("Tester");
+  await page.getByLabel("First name").fill("Amina");
+  await page.getByLabel("Last name").fill("Yusuf");
   await page.getByLabel("Email").fill(email);
   await page.getByLabel("Password").fill(PASSWORD);
-  await page.getByRole("button", { name: "Create account" }).click();
+  await page.getByRole("button", { name: "Create my account" }).click();
   await page.waitForURL(/verify-email/);
 
   const token = latestVerificationToken();
@@ -45,17 +45,32 @@ export async function signUpAndVerify(page: Page, email: string): Promise<void> 
   await page.waitForURL(/dashboard/, { timeout: 20_000 });
 }
 
+/**
+ * Opens an onboarding step by its title.
+ *
+ * Scoped to the step navigation and matched on the title alone, because the button's
+ * accessible name also contains its position indicator — which changes from a number to a
+ * tick once the step is complete. Matching the whole string made these selectors break
+ * whenever the nav's visual treatment changed, which is not what they exist to detect.
+ */
+async function gotoStep(page: Page, title: string): Promise<void> {
+  const nav = page.getByRole("navigation", { name: "Onboarding steps" });
+  await nav.getByRole("button").filter({ hasText: title }).click();
+}
+
 /** Completes every onboarding step through the wizard UI. */
 export async function completeOnboarding(page: Page): Promise<void> {
   await page.goto("/onboarding");
+  const save = () => page.getByRole("button", { name: "Save", exact: true }).click();
 
-  await page.getByRole("button", { name: /1\. About you/ }).click();
-  await page.getByLabel("First name").fill("Browser");
-  await page.getByLabel("Last name").fill("Tester");
+  await gotoStep(page, "About you");
+  await page.getByLabel("First name").fill("Amina");
+  await page.getByLabel("Last name").fill("Yusuf");
   await page.getByLabel("Date of birth").fill("2002-01-01");
-  await page.getByRole("button", { name: "Save", exact: true }).click();
+  await save();
+  await page.waitForTimeout(400);
 
-  await page.getByRole("button", { name: /2\. Education/ }).click();
+  await gotoStep(page, "Education");
   await page.getByLabel("Institution").fill("Test University");
   await page.getByLabel("Country").selectOption({ label: "United Kingdom" });
   await page.getByLabel("Field of study").fill("Computer Science");
@@ -63,30 +78,32 @@ export async function completeOnboarding(page: Page): Promise<void> {
   await page.getByRole("button", { name: "Add", exact: true }).click();
   await page.waitForTimeout(500);
 
-  await page.getByRole("button", { name: /3\. Where you want to study/ }).click();
+  await gotoStep(page, "Where you want to study");
   await page.getByLabel("United Kingdom", { exact: true }).check();
   await page.getByLabel("Target intake").fill("Fall 2027");
-  await page.getByRole("button", { name: "Save", exact: true }).click();
+  await save();
   await page.waitForTimeout(500);
 
-  await page.getByRole("button", { name: /4\. Budget/ }).click();
+  await gotoStep(page, "Budget");
   await page.getByLabel("Maximum per year").fill("40000");
   await page.getByLabel("Currency").selectOption("GBP");
-  await page.getByRole("button", { name: "Save", exact: true }).click();
+  await save();
   await page.waitForTimeout(500);
 
-  await page.getByRole("button", { name: /5\. English proficiency/ }).click();
+  await gotoStep(page, "English proficiency");
   await page.getByRole("button", { name: "Add a test result" }).click();
   await page.getByLabel("Overall score").fill("7.5");
   await page.getByLabel("Test date").fill("2026-03-01");
   await page.getByRole("button", { name: "Add result" }).click();
   await page.waitForTimeout(500);
 
-  await page.getByRole("button", { name: /6\. Preferences/ }).click();
+  await gotoStep(page, "Preferences");
   await page.getByLabel("Study mode").selectOption("ON_CAMPUS");
-  await page.getByRole("button", { name: "Save", exact: true }).click();
+  await save();
   await page.waitForTimeout(500);
 
-  await page.getByRole("button", { name: /Finish and see my matches/ }).click();
+  const finish = page.getByRole("button", { name: /Finish and see my matches/ });
+  await expect(finish).toBeEnabled({ timeout: 10_000 });
+  await finish.click();
   await page.waitForURL(/dashboard/, { timeout: 20_000 });
 }

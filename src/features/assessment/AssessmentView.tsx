@@ -1,12 +1,11 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
+import { Info, RefreshCw, Sparkles } from "lucide-react";
 import { Card } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
 import { Alert } from "@/components/ui/Alert";
-import { Badge } from "@/components/ui/Badge";
 import { Skeleton } from "@/components/ui/Skeleton";
-import { EmptyState } from "@/components/ui/EmptyState";
 import { apiGet, apiPost, ApiError } from "@/lib/api-client";
 import { MatchCard } from "./MatchCard";
 import { LockedZone } from "./LockedZone";
@@ -73,15 +72,21 @@ export function AssessmentView() {
             {error}
           </Alert>
         )}
-        <EmptyState
-          title="No assessment yet"
-          description="Run your first assessment to see which programmes fit your profile, and why."
-          action={
-            <Button onClick={runAssessment} isLoading={isRunning}>
-              Run my assessment
-            </Button>
-          }
-        />
+        <Card tone="brand" className="text-center">
+          <span className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-xl bg-brand-gradient shadow-brand-glow">
+            <Sparkles className="h-6 w-6 text-white" aria-hidden />
+          </span>
+          <h2 className="text-xl font-semibold tracking-tight text-text-primary">
+            Ready to see where you stand?
+          </h2>
+          <p className="mx-auto mt-2 max-w-md text-sm leading-relaxed text-text-secondary">
+            We&apos;ll score every programme in the catalog against your profile and show you
+            the reasoning behind each one.
+          </p>
+          <Button onClick={runAssessment} isLoading={isRunning} size="lg" className="mt-6">
+            Run my assessment
+          </Button>
+        </Card>
       </>
     );
   }
@@ -98,56 +103,77 @@ export function AssessmentView() {
       )}
 
       <Card className="mb-6">
-        <div className="flex flex-wrap items-start justify-between gap-4">
+        <div className="flex flex-wrap items-start justify-between gap-5">
           <div>
-            <h2 className="text-lg font-semibold text-text-primary">
+            <h2 className="text-xl font-semibold tracking-tight text-text-primary">
               {counts.SAFE + counts.TARGET + counts.REACH} programmes matched
             </h2>
-            <p className="text-sm text-text-secondary">
+            <p className="mt-0.5 text-sm text-text-secondary">
               Assessed {new Date(generatedAt).toLocaleDateString()} · engine{" "}
               {data.results.matchingEngineVersion} · rules {data.results.rulesVersion}
             </p>
-            <div className="mt-2 flex flex-wrap gap-2">
-              <Badge tone="success">{counts.SAFE} strong</Badge>
-              <Badge tone="primary">{counts.TARGET} good</Badge>
-              <Badge tone="warning">{counts.REACH} ambitious</Badge>
-            </div>
           </div>
           <Button variant="ghost" onClick={runAssessment} isLoading={isRunning}>
-            Re-run assessment
+            <RefreshCw className="h-4 w-4" aria-hidden />
+            Re-run
           </Button>
         </div>
-        <p className="mt-4 border-t border-text-secondary/15 pt-3 text-xs text-text-secondary">
-          This is an indicative eligibility assessment based on the information you provided
-          and on programme data that may change. It is not an admission decision — those rest
-          with the universities themselves.
+
+        <div className="mt-5 grid grid-cols-3 gap-3">
+          {[
+            { label: "Strong matches", value: counts.SAFE, className: "text-secondary-700" },
+            { label: "Good matches", value: counts.TARGET, className: "text-primary-700" },
+            { label: "Ambitious", value: counts.REACH, className: "text-warning" },
+          ].map((stat) => (
+            <div key={stat.label} className="rounded-md bg-bg px-4 py-3.5">
+              <p className={`text-3xl font-semibold tabular-nums ${stat.className}`}>{stat.value}</p>
+              <p className="mt-0.5 text-xs text-text-secondary">{stat.label}</p>
+            </div>
+          ))}
+        </div>
+
+        <p className="mt-5 flex gap-2 border-t border-border pt-4 text-xs leading-relaxed text-text-muted">
+          <Info className="mt-px h-4 w-4 shrink-0" aria-hidden />
+          <span>
+            An indicative eligibility assessment based on what you told us and on programme
+            data that may change. It is not an admission decision — those rest with the
+            universities themselves.
+          </span>
         </p>
       </Card>
-
-      {(lockedCounts.TARGET > 0 || lockedCounts.SAFE > 0) && (
-        <div className="mb-6">
-          <LockedZone
-            assessmentId={assessmentId}
-            targetCount={lockedCounts.TARGET}
-            safeCount={lockedCounts.SAFE}
-            visibleCount={visible.filter((r) => r.zone !== "REACH").length}
-          />
-        </div>
-      )}
 
       {ZONE_ORDER.map((zone) => {
         const zoneResults = visible.filter((r) => r.zone === zone);
         if (zoneResults.length === 0) return null;
         return (
-          <section key={zone} className="mb-8">
-            <h2 className="text-lg font-semibold text-text-primary">{ZONE_HEADING[zone]}</h2>
-            <p className="mb-3 text-sm text-text-secondary">{ZONE_BLURB[zone]}</p>
+          <section key={zone} className="mb-9">
+            <div className="mb-4 flex items-baseline gap-2.5">
+              <h2 className="text-lg font-semibold tracking-tight text-text-primary">
+                {ZONE_HEADING[zone]}
+              </h2>
+              <span className="rounded-full bg-bg px-2 py-0.5 text-xs font-medium tabular-nums text-text-secondary">
+                {zoneResults.length}
+              </span>
+            </div>
+            <p className="-mt-3 mb-4 text-sm text-text-secondary">{ZONE_BLURB[zone]}</p>
             {zoneResults.map((result) => (
               <MatchCard key={result.programId} result={result} />
             ))}
           </section>
         );
       })}
+
+      {/* Placed after the readable matches, not before them: the panel's own copy refers
+          to what is "shown above", and asking for money before showing any of the quality
+          it is selling reads as a wall rather than an offer. */}
+      {(lockedCounts.TARGET > 0 || lockedCounts.SAFE > 0) && (
+        <LockedZone
+          assessmentId={assessmentId}
+          targetCount={lockedCounts.TARGET}
+          safeCount={lockedCounts.SAFE}
+          visibleCount={visible.filter((r) => r.zone !== "REACH").length}
+        />
+      )}
     </div>
   );
 }

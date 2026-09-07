@@ -1,21 +1,25 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import type { Metadata } from "next";
+import {
+  ArrowRight,
+  CalendarClock,
+  FileCheck2,
+  ScanSearch,
+  Send,
+  Sparkles,
+} from "lucide-react";
 import { getActor } from "@/lib/auth/guards";
 import { getDashboardSummary } from "@/services/dashboard-service";
-import { Card } from "@/components/ui/Card";
+import { Card, CardLabel } from "@/components/ui/Card";
 import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
 import { Alert } from "@/components/ui/Alert";
+import { EmptyState } from "@/components/ui/EmptyState";
+import { JourneyRoadmap } from "@/features/dashboard/JourneyRoadmap";
+import { GlowField } from "@/components/brand/WorldMotif";
 
 export const metadata: Metadata = { title: "Dashboard · AdmitFlow" };
-
-const STAGE_TONE = {
-  COMPLETE: "success",
-  ACTIVE: "primary",
-  BLOCKED: "error",
-  LOCKED: "neutral",
-} as const;
 
 export default async function DashboardPage() {
   const actor = await getActor();
@@ -24,153 +28,191 @@ export default async function DashboardPage() {
   const summary = await getDashboardSummary(actor.userId, actor.profileId, actor.status);
 
   return (
-    <div>
-      <h1 className="mb-1 text-2xl font-semibold text-text-primary">Your journey</h1>
-      <p className="mb-6 text-sm text-text-secondary">
-        Everything you need to apply abroad, in one place.
-      </p>
+    <div className="animate-fade-in">
+      <div className="mb-8">
+        <h1 className="text-3xl font-semibold tracking-tight text-text-primary">
+          {/* Their own name, never an email prefix — "Welcome back, a.khan-1788" is a
+              worse greeting than none at all. */}
+          Welcome back{summary.firstName ? `, ${summary.firstName}` : ""}
+        </h1>
+        <p className="mt-1 text-sm text-text-secondary">
+          Here&apos;s where your application stands today.
+        </p>
+      </div>
 
+      {/* The single most useful thing to do next, given precedence over everything else
+          on the page — the brief's §73 core UX principle. */}
       {summary.nextAction && (
-        <Card className="mb-6 border-secondary/40 bg-secondary/5">
-          <p className="mb-1 text-xs font-semibold uppercase tracking-wide text-secondary">
-            Do this next
-          </p>
-          <h2 className="mb-1 text-lg font-semibold text-text-primary">
-            {summary.nextAction.label}
-          </h2>
-          <p className="mb-4 text-sm text-text-secondary">{summary.nextAction.rationale}</p>
-          <Link href={summary.nextAction.href}>
-            <Button>{summary.nextAction.label}</Button>
-          </Link>
-        </Card>
+        <div className="relative mb-9 overflow-hidden rounded-xl bg-brand-gradient p-8 text-white shadow-lg">
+          <GlowField />
+          <div className="relative flex flex-wrap items-end justify-between gap-6">
+            <div className="max-w-xl">
+              <p className="mb-2.5 inline-flex items-center gap-1.5 rounded-full bg-white/10 px-3 py-1 text-xs font-medium ring-1 ring-inset ring-white/15">
+                <Sparkles className="h-3.5 w-3.5 text-secondary-200" aria-hidden />
+                Do this next
+              </p>
+              <h2 className="text-2xl font-semibold tracking-tight">{summary.nextAction.label}</h2>
+              <p className="mt-2 text-white/70">{summary.nextAction.rationale}</p>
+            </div>
+            <Link href={summary.nextAction.href}>
+              <Button size="lg" variant="secondary" className="bg-white text-primary hover:bg-white/90">
+                {summary.nextAction.label}
+                <ArrowRight className="h-4 w-4" aria-hidden />
+              </Button>
+            </Link>
+          </div>
+        </div>
       )}
 
-      <section className="mb-8">
-        <h2 className="mb-3 text-sm font-semibold uppercase tracking-wide text-text-secondary">
-          Progress
-        </h2>
-        <ol className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-          {summary.journey.map((stage) => (
-            <li key={stage.key}>
-              <Link href={stage.status === "LOCKED" ? "#" : stage.href} className="block">
-                <Card
-                  className={
-                    stage.status === "LOCKED"
-                      ? "opacity-60"
-                      : "transition-shadow duration-base hover:shadow-md"
-                  }
-                >
-                  <div className="mb-1 flex items-center justify-between gap-2">
-                    <span className="font-medium text-text-primary">{stage.label}</span>
-                    <Badge tone={STAGE_TONE[stage.status]}>
-                      {stage.status === "COMPLETE"
-                        ? "Done"
-                        : stage.status === "ACTIVE"
-                          ? "In progress"
-                          : stage.status === "BLOCKED"
-                            ? "Needs attention"
-                            : "Locked"}
-                    </Badge>
-                  </div>
-                  <p className="text-sm text-text-secondary">{stage.detail}</p>
-                </Card>
-              </Link>
-            </li>
-          ))}
-        </ol>
+      <section className="mb-10">
+        <CardLabel>Your journey</CardLabel>
+        <JourneyRoadmap stages={summary.journey} />
       </section>
 
-      <div className="grid gap-6 lg:grid-cols-2">
+      <div className="grid gap-5 lg:grid-cols-2">
+        {/* ------------------------------------------------------------ matches -- */}
         <Card>
-          <h2 className="mb-3 text-sm font-semibold uppercase tracking-wide text-text-secondary">
-            Your matches
-          </h2>
+          <div className="mb-4 flex items-center gap-2.5">
+            <span className="flex h-9 w-9 items-center justify-center rounded-lg bg-brand-gradient-soft ring-1 ring-inset ring-secondary-200">
+              <ScanSearch className="h-4.5 w-4.5 text-secondary-700" aria-hidden />
+            </span>
+            <h2 className="font-semibold text-text-primary">Your matches</h2>
+          </div>
+
           {summary.latestAssessment ? (
             <>
-              <div className="mb-3 flex flex-wrap gap-2">
-                <Badge tone="success">{summary.latestAssessment.safe} strong</Badge>
-                <Badge tone="primary">{summary.latestAssessment.target} good</Badge>
-                <Badge tone="warning">{summary.latestAssessment.reach} ambitious</Badge>
+              <div className="mb-4 grid grid-cols-3 gap-3">
+                {[
+                  { label: "Strong", value: summary.latestAssessment.safe, tone: "success" as const },
+                  { label: "Good", value: summary.latestAssessment.target, tone: "primary" as const },
+                  { label: "Ambitious", value: summary.latestAssessment.reach, tone: "warning" as const },
+                ].map((stat) => (
+                  <div key={stat.label} className="rounded-md bg-bg px-3 py-3 text-center">
+                    <p className="text-2xl font-semibold text-text-primary">{stat.value}</p>
+                    <p className="text-xs text-text-secondary">{stat.label}</p>
+                  </div>
+                ))}
               </div>
               <p className="mb-4 text-sm text-text-secondary">
-                Last assessed{" "}
-                {summary.latestAssessment.generatedAt.toISOString().slice(0, 10)}.
-                {!summary.latestAssessment.unlocked &&
-                  " Strong and good matches are locked until you unlock them."}
+                Last assessed {summary.latestAssessment.generatedAt.toISOString().slice(0, 10)}.
+                {!summary.latestAssessment.unlocked && " Some matches are still locked."}
               </p>
               <Link href="/dashboard/assessment">
                 <Button variant="ghost" size="sm">
                   View matches
+                  <ArrowRight className="h-4 w-4" aria-hidden />
                 </Button>
               </Link>
             </>
           ) : (
-            <p className="text-sm text-text-secondary">
-              No assessment yet — complete your profile to run one.
-            </p>
+            <EmptyState
+              title="No assessment yet"
+              description="Complete your profile and we'll score every programme against it."
+              action={
+                <Link href="/onboarding">
+                  <Button size="sm">Complete profile</Button>
+                </Link>
+              }
+              className="border-0 px-0 py-4 text-left"
+            />
           )}
         </Card>
 
+        {/* ---------------------------------------------------------- documents -- */}
         <Card>
-          <h2 className="mb-3 text-sm font-semibold uppercase tracking-wide text-text-secondary">
-            Documents
-          </h2>
-          <dl className="mb-4 grid grid-cols-2 gap-2 text-sm">
-            <div>
-              <dt className="text-text-secondary">Verified</dt>
-              <dd className="font-medium text-text-primary">{summary.counts.documentsVerified}</dd>
-            </div>
-            <div>
-              <dt className="text-text-secondary">Awaiting review</dt>
-              <dd className="font-medium text-text-primary">{summary.counts.documentsPending}</dd>
-            </div>
-            <div>
-              <dt className="text-text-secondary">Rejected</dt>
-              <dd className="font-medium text-error">{summary.counts.documentsRejected}</dd>
-            </div>
-            <div>
-              <dt className="text-text-secondary">Still needed</dt>
-              <dd className="font-medium text-text-primary">{summary.counts.documentsMissing}</dd>
-            </div>
+          <div className="mb-4 flex items-center gap-2.5">
+            <span className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary-50 ring-1 ring-inset ring-primary-100">
+              <FileCheck2 className="h-4.5 w-4.5 text-primary-700" aria-hidden />
+            </span>
+            <h2 className="font-semibold text-text-primary">Documents</h2>
+          </div>
+
+          {/* Stacked stat blocks rather than label/value rows: on a two-column grid the
+              rows read as "0 Awaiting review" across the gap, pairing each number with
+              the wrong label. */}
+          <dl className="mb-5 grid grid-cols-2 gap-3 sm:grid-cols-4">
+            {[
+              { label: "Verified", value: summary.counts.documentsVerified, accent: "text-secondary-700" },
+              { label: "In review", value: summary.counts.documentsPending, accent: "text-info" },
+              { label: "Rejected", value: summary.counts.documentsRejected, accent: "text-error" },
+              { label: "Needed", value: summary.counts.documentsMissing, accent: "text-text-primary" },
+            ].map((row) => (
+              <div key={row.label} className="rounded-md bg-bg px-3 py-3">
+                <dd className={`text-xl font-semibold tabular-nums ${row.accent}`}>{row.value}</dd>
+                <dt className="mt-0.5 text-xs text-text-secondary">{row.label}</dt>
+              </div>
+            ))}
           </dl>
+
           <Link href="/dashboard/vault">
             <Button variant="ghost" size="sm">
               Manage documents
+              <ArrowRight className="h-4 w-4" aria-hidden />
             </Button>
           </Link>
         </Card>
 
+        {/* ------------------------------------------------------- applications -- */}
         <Card>
-          <h2 className="mb-3 text-sm font-semibold uppercase tracking-wide text-text-secondary">
-            Applications
-          </h2>
-          <p className="mb-4 text-sm text-text-secondary">
-            {summary.counts.applications === 0
-              ? "No applications started yet."
-              : `${summary.counts.applications} total · ${summary.counts.applicationsSubmitted} submitted`}
-          </p>
+          <div className="mb-4 flex items-center gap-2.5">
+            <span className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary-50 ring-1 ring-inset ring-primary-100">
+              <Send className="h-4.5 w-4.5 text-primary-700" aria-hidden />
+            </span>
+            <h2 className="font-semibold text-text-primary">Applications</h2>
+          </div>
+
+          {summary.counts.applications === 0 ? (
+            <p className="mb-5 text-sm text-text-secondary">
+              None started yet. Pick a programme from your matches whenever you&apos;re ready.
+            </p>
+          ) : (
+            <div className="mb-5 flex gap-6">
+              <div>
+                <p className="text-2xl font-semibold text-text-primary">
+                  {summary.counts.applications}
+                </p>
+                <p className="text-xs text-text-secondary">in progress</p>
+              </div>
+              <div>
+                <p className="text-2xl font-semibold text-secondary-700">
+                  {summary.counts.applicationsSubmitted}
+                </p>
+                <p className="text-xs text-text-secondary">submitted</p>
+              </div>
+            </div>
+          )}
+
           <Link href="/dashboard/applications">
             <Button variant="ghost" size="sm">
               View applications
+              <ArrowRight className="h-4 w-4" aria-hidden />
             </Button>
           </Link>
         </Card>
 
-        <Card>
-          <h2 className="mb-3 text-sm font-semibold uppercase tracking-wide text-text-secondary">
-            Upcoming deadlines
-          </h2>
+        {/* ---------------------------------------------------------- deadlines -- */}
+        <Card tone={summary.deadlines.some((d) => d.daysLeft <= 14) ? "warning" : "default"}>
+          <div className="mb-4 flex items-center gap-2.5">
+            <span className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary-50 ring-1 ring-inset ring-primary-100">
+              <CalendarClock className="h-4.5 w-4.5 text-primary-700" aria-hidden />
+            </span>
+            <h2 className="font-semibold text-text-primary">Upcoming deadlines</h2>
+          </div>
+
           {summary.deadlines.length === 0 ? (
             <p className="text-sm text-text-secondary">Nothing due right now.</p>
           ) : (
-            <ul className="space-y-2">
+            <ul className="space-y-2.5">
               {summary.deadlines.map((d) => (
-                <li key={d.applicationId} className="flex items-center justify-between gap-3 text-sm">
-                  <span className="min-w-0 truncate text-text-primary">
-                    {d.program} · {d.term}
+                <li key={d.applicationId} className="flex items-center justify-between gap-3">
+                  <span className="min-w-0">
+                    <span className="block truncate text-sm font-medium text-text-primary">
+                      {d.program}
+                    </span>
+                    <span className="text-xs text-text-secondary">{d.term}</span>
                   </span>
                   <Badge tone={d.daysLeft <= 14 ? "error" : d.daysLeft <= 30 ? "warning" : "neutral"}>
-                    {d.daysLeft}d
+                    {d.daysLeft}d left
                   </Badge>
                 </li>
               ))}
@@ -180,9 +222,13 @@ export default async function DashboardPage() {
       </div>
 
       {summary.accountStatus === "ONBOARDING" && (
-        <Alert tone="info" className="mt-6">
-          Your profile isn&apos;t finished yet. Assessment, applications and bookings unlock once
-          it is. <Link href="/onboarding" className="font-medium underline">Finish your profile</Link>.
+        <Alert tone="info" className="mt-8">
+          Your profile isn&apos;t finished yet — assessment, applications and bookings unlock
+          once it is.{" "}
+          <Link href="/onboarding" className="font-medium underline underline-offset-2">
+            Finish your profile
+          </Link>
+          .
         </Alert>
       )}
     </div>

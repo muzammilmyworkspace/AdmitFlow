@@ -6,6 +6,10 @@ import { completeOnboarding, signUpAndVerify, uniqueEmail } from "./helpers";
 // work end to end: signup -> verification -> onboarding -> assessment -> unlock.
 
 test.describe("Student journey", () => {
+  // Generous: this runs against `next dev`, which compiles each route on first hit —
+  // the billing routes alone cost ~60s cold. Production builds are pre-compiled.
+  test.setTimeout(180_000);
+
   test("signs up, onboards, assesses, and unlocks matches", async ({ page }) => {
     const email = uniqueEmail("journey");
 
@@ -39,13 +43,13 @@ test.describe("Student journey", () => {
     });
 
     await test.step("the rest are paywalled, and nothing about them leaks", async () => {
-      await expect(page.getByText(/more matches available/)).toBeVisible();
+      await expect(page.getByText(/more matches found/)).toBeVisible();
 
       // Locked programmes must not be present anywhere in the delivered HTML — not
       // hidden, not blurred, not in a data attribute (docs/54-decision-log.md D-5).
       // Counting rendered cards against the stated locked total proves the server sent
       // only what it should, whichever programmes happened to be previewed.
-      const lockedText = await page.getByText(/more matches available/).innerText();
+      const lockedText = await page.getByText(/more matches found/).innerText();
       const lockedTotal = Number(lockedText.match(/^(\d+)/)?.[1] ?? "0");
       const renderedCards = await page.getByRole("button", { name: "Why this score?" }).count();
       expect(lockedTotal).toBeGreaterThan(0);
@@ -54,10 +58,10 @@ test.describe("Student journey", () => {
 
     await test.step("unlock through checkout", async () => {
       await page.getByRole("button", { name: /Unlock all matches/ }).click();
-      await page.waitForURL(/dev-checkout/, { timeout: 20_000 });
+      await page.waitForURL(/dev-checkout/, { timeout: 90_000 });
       await expect(page.getByText("Development checkout")).toBeVisible();
       await page.getByRole("button", { name: /^Pay/ }).click();
-      await page.waitForURL(/billing\/success/, { timeout: 20_000 });
+      await page.waitForURL(/billing\/success/, { timeout: 90_000 });
     });
 
     await test.step("matches are now visible with full reasoning", async () => {
@@ -65,7 +69,7 @@ test.describe("Student journey", () => {
       await expect(page.getByRole("heading", { name: "Strong matches" })).toBeVisible({
         timeout: 20_000,
       });
-      await expect(page.getByText(/more matches available/)).toHaveCount(0);
+      await expect(page.getByText(/more matches found/)).toHaveCount(0);
 
       // Explainability is a product requirement, not a nice-to-have.
       await page.getByRole("button", { name: "Why this score?" }).first().click();

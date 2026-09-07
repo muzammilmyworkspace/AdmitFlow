@@ -43,3 +43,6 @@ tsconfig.tsbuildinfo
 # playwright output
 /test-results/
 /playwright-report/
+
+# visual capture output (regenerate with: npx playwright test screenshots)
+/screenshots/

@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+import { ArrowLeft, ArrowRight, Check } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
 import { Alert } from "@/components/ui/Alert";
@@ -107,17 +108,24 @@ export function OnboardingWizard() {
 
   return (
     <div className="grid gap-6 lg:grid-cols-[240px_1fr]">
-      <nav aria-label="Onboarding steps" className="lg:sticky lg:top-6 lg:self-start">
-        <div className="mb-4">
+      <nav aria-label="Onboarding steps" className="lg:sticky lg:top-24 lg:self-start">
+        <div className="mb-5 rounded-lg border border-border bg-surface p-5 shadow-sm">
+          <div className="mb-2.5 flex items-baseline justify-between">
+            <span className="text-sm font-medium text-text-primary">Your progress</span>
+            <span className="text-sm font-semibold tabular-nums text-secondary-700">
+              {Math.round((status.completedCount / status.totalSteps) * 100)}%
+            </span>
+          </div>
           <ProgressBar
             value={status.completedCount}
             max={status.totalSteps}
             label={`${status.completedCount} of ${status.totalSteps} sections complete`}
           />
-          <p className="mt-2 text-xs text-text-secondary">
+          <p className="mt-2.5 text-xs text-text-secondary">
             {status.completedCount} of {status.totalSteps} sections complete
           </p>
         </div>
+
         <ol className="space-y-1">
           {STEPS.map((step, index) => {
             const done = status.steps[step.key];
@@ -128,20 +136,24 @@ export function OnboardingWizard() {
                   type="button"
                   onClick={() => setActiveStep(step.key)}
                   aria-current={isActive ? "step" : undefined}
-                  className={`flex w-full items-center justify-between rounded-md px-3 py-2 text-left text-sm transition-colors duration-fast ${
+                  className={`flex w-full items-center gap-3 rounded-md px-3 py-2.5 text-left text-sm transition-colors duration-fast ${
                     isActive
-                      ? "bg-primary text-white"
-                      : "text-text-primary hover:bg-text-secondary/10"
+                      ? "bg-primary-50 font-medium text-primary-700"
+                      : "text-text-secondary hover:bg-bg hover:text-text-primary"
                   }`}
                 >
-                  <span>
-                    {index + 1}. {step.title}
+                  <span
+                    className={`flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-xs font-semibold ${
+                      done
+                        ? "bg-brand-gradient text-white"
+                        : isActive
+                          ? "bg-primary text-white"
+                          : "bg-bg text-text-muted ring-1 ring-inset ring-border"
+                    }`}
+                  >
+                    {done ? <Check className="h-3.5 w-3.5" aria-hidden /> : index + 1}
                   </span>
-                  {done && (
-                    <span aria-label="complete" className={isActive ? "text-white" : "text-success"}>
-                      ✓
-                    </span>
-                  )}
+                  {step.title}
                 </button>
               </li>
             );
@@ -169,19 +181,29 @@ export function OnboardingWizard() {
           {activeStep === "english" && <EnglishStep {...stepProps} />}
           {activeStep === "preferences" && <PreferencesStep {...stepProps} />}
 
-          <div className="mt-6 flex items-center justify-between border-t border-text-secondary/15 pt-5">
+          <div className="mt-7 flex items-center justify-between border-t border-border pt-5">
             <Button
               variant="ghost"
               disabled={currentIndex === 0}
               onClick={() => setActiveStep(STEPS[currentIndex - 1]!.key)}
             >
+              <ArrowLeft className="h-4 w-4" aria-hidden />
               Back
             </Button>
             {currentIndex < STEPS.length - 1 ? (
-              <Button onClick={() => setActiveStep(STEPS[currentIndex + 1]!.key)}>Next</Button>
+              <Button variant="subtle" onClick={() => setActiveStep(STEPS[currentIndex + 1]!.key)}>
+                Next
+                <ArrowRight className="h-4 w-4" aria-hidden />
+              </Button>
             ) : (
-              <Button onClick={handleFinish} isLoading={isSaving} disabled={!status.isComplete}>
+              <Button
+                onClick={handleFinish}
+                isLoading={isSaving}
+                disabled={!status.isComplete}
+                size="lg"
+              >
                 Finish and see my matches
+                <ArrowRight className="h-4 w-4" aria-hidden />
               </Button>
             )}
           </div>

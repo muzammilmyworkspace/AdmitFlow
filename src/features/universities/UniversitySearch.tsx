@@ -25,7 +25,7 @@ interface ProgramRow {
   minIelts: number | null;
   minGpa: number | null;
   nextIntake: { term: string; status: string; applicationDeadline: string } | null;
-  dataFreshness: { isStale: boolean; source: string | null };
+  dataFreshness: { isStale: boolean; source: string | null; label: string | null };
 }
 
 interface Country {
@@ -191,8 +191,8 @@ export function UniversitySearch() {
                         {program.minGpa !== null && (
                           <Badge tone="info">GPA {program.minGpa}</Badge>
                         )}
-                        {program.dataFreshness.isStale && (
-                          <Badge tone="warning">Data may be outdated</Badge>
+                        {program.dataFreshness.label && (
+                          <Badge tone="neutral">{program.dataFreshness.label}</Badge>
                         )}
                       </div>
                     </div>

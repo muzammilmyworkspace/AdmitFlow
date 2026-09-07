@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
+import { AtSign, KeyRound } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
 import { FormField } from "@/components/ui/FormField";
@@ -41,17 +42,19 @@ export function LoginForm() {
   }
 
   return (
-    <Card>
-      <h1 className="mb-1 text-xl font-semibold text-text-primary">Sign in</h1>
-      <p className="mb-6 text-sm text-text-secondary">Welcome back to AdmitFlow.</p>
+    <Card className="shadow-lg">
+      <h1 className="text-2xl font-semibold tracking-tight text-text-primary">Welcome back</h1>
+      <p className="mb-7 mt-1.5 text-sm text-text-secondary">
+        Pick up where you left off.
+      </p>
 
       {error && (
-        <Alert tone="error" className="mb-4">
+        <Alert tone="error" className="mb-5">
           {error.message}
           {error.unverified && (
             <>
               {" "}
-              <Link href="/verify-email" className="font-medium underline">
+              <Link href="/verify-email" className="font-medium underline underline-offset-2">
                 Verify your email
               </Link>
             </>
@@ -61,7 +64,15 @@ export function LoginForm() {
 
       <form onSubmit={handleSubmit} noValidate>
         <FormField label="Email">
-          <Input type="email" value={values.email} onChange={update("email")} required autoComplete="email" />
+          <Input
+            type="email"
+            value={values.email}
+            onChange={update("email")}
+            required
+            autoComplete="email"
+            icon={<AtSign />}
+            placeholder="you@example.com"
+          />
         </FormField>
         <FormField label="Password">
           <Input
@@ -70,21 +81,25 @@ export function LoginForm() {
             onChange={update("password")}
             required
             autoComplete="current-password"
+            icon={<KeyRound />}
           />
         </FormField>
 
-        <Button type="submit" className="w-full" isLoading={isSubmitting}>
+        <Button type="submit" className="w-full" size="lg" isLoading={isSubmitting}>
           Sign in
         </Button>
       </form>
 
-      <div className="mt-6 flex flex-col gap-2 text-center text-sm text-text-secondary">
-        <Link href="/forgot-password" className="font-medium text-primary underline">
+      <div className="mt-6 flex flex-col gap-2.5 text-center text-sm text-text-secondary">
+        <Link
+          href="/forgot-password"
+          className="font-medium text-secondary-700 underline underline-offset-2"
+        >
           Forgot your password?
         </Link>
         <span>
           New here?{" "}
-          <Link href="/signup" className="font-medium text-primary underline">
+          <Link href="/signup" className="font-medium text-secondary-700 underline underline-offset-2">
             Create an account
           </Link>
         </span>

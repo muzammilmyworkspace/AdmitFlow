@@ -1,30 +1,47 @@
 import { forwardRef } from "react";
-import type { InputHTMLAttributes } from "react";
+import type { InputHTMLAttributes, ReactNode } from "react";
 import { cn } from "@/lib/cn";
 
 export interface InputProps extends InputHTMLAttributes<HTMLInputElement> {
   invalid?: boolean;
+  /** Leading affordance (an icon). Decorative — label text lives in <FormField>. */
+  icon?: ReactNode;
 }
 
-// Accessible form input — accessibility requirements from docs/43-accessibility.md:
-// visible focus state (global :focus-visible rule), aria-invalid wired by the caller
-// via `invalid`, always paired with a <FormField> label (see FormField.tsx).
+// Accessible form input — docs/43-accessibility.md: visible focus (global :focus-visible),
+// aria-invalid wired by the caller, always paired with a <FormField> label.
 export const Input = forwardRef<HTMLInputElement, InputProps>(
-  ({ className, invalid, ...props }, ref) => {
-    return (
+  ({ className, invalid, icon, ...props }, ref) => {
+    const field = (
       <input
         ref={ref}
         aria-invalid={invalid || undefined}
         className={cn(
-          "h-11 w-full rounded-md border bg-surface px-3 text-sm text-text-primary",
-          "placeholder:text-text-secondary/70",
-          "transition-colors duration-fast",
-          invalid ? "border-error" : "border-text-secondary/30",
-          "disabled:cursor-not-allowed disabled:opacity-50",
+          "h-11 w-full rounded-md border bg-surface px-3.5 text-sm text-text-primary",
+          "placeholder:text-text-muted",
+          "transition-[border-color,box-shadow] duration-fast",
+          invalid
+            ? "border-error focus:border-error"
+            : "border-border hover:border-primary-200 focus:border-secondary-400",
+          "disabled:cursor-not-allowed disabled:bg-bg disabled:opacity-60",
+          icon && "pl-10",
           className,
         )}
         {...props}
       />
+    );
+
+    if (!icon) return field;
+    return (
+      <div className="relative">
+        <span
+          className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-text-muted [&>svg]:h-4 [&>svg]:w-4"
+          aria-hidden
+        >
+          {icon}
+        </span>
+        {field}
+      </div>
     );
   },
 );

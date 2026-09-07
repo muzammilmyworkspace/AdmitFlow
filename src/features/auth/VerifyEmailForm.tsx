@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
+import { MailCheck } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
 import { FormField } from "@/components/ui/FormField";
@@ -57,18 +58,24 @@ export function VerifyEmailForm() {
 
   if (isVerifyingLink) {
     return (
-      <Card className="flex items-center gap-3">
-        <Spinner className="text-primary" />
+      <Card className="flex items-center gap-3 shadow-lg">
+        <Spinner className="text-secondary-600" />
         <span className="text-sm text-text-secondary">Verifying your email…</span>
       </Card>
     );
   }
 
   return (
-    <Card>
-      <h1 className="mb-1 text-xl font-semibold text-text-primary">Verify your email</h1>
-      <p className="mb-6 text-sm text-text-secondary">
-        We sent you a verification link and a 6-digit code. Use either one.
+    <Card className="shadow-lg">
+      <span className="mb-5 flex h-12 w-12 items-center justify-center rounded-xl bg-brand-gradient-soft ring-1 ring-inset ring-secondary-200">
+        <MailCheck className="h-6 w-6 text-secondary-700" aria-hidden />
+      </span>
+      <h1 className="text-2xl font-semibold tracking-tight text-text-primary">
+        Check your inbox
+      </h1>
+      <p className="mb-6 mt-1.5 text-sm leading-relaxed text-text-secondary">
+        We sent you a verification link and a 6-digit code. Either one works — whichever is
+        easier.
       </p>
 
       {error && (
@@ -86,6 +93,10 @@ export function VerifyEmailForm() {
               inputMode="numeric"
               autoComplete="one-time-code"
               required
+              placeholder="000000"
+              // Wide tracking and a centred monospace-ish rhythm make a 6-digit code far
+              // easier to check against the one in the email than default body text.
+              className="text-center text-xl font-semibold tracking-[0.45em] tabular-nums"
             />
           </FormField>
           <Button type="submit" className="w-full" isLoading={isSubmitting} disabled={otp.length !== 6}>

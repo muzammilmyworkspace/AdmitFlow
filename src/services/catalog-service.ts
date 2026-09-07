@@ -176,13 +176,48 @@ function toProgramSummary(program: ProgramWithRelations) {
           applicationDeadline: nextIntake.applicationDeadline,
         }
       : null,
-    dataFreshness: {
+    dataFreshness: describeFreshness(
       verifiedAt,
-      isStale: isStale(verifiedAt, STALENESS_MONTHS.REQUIREMENTS),
-      confidence: program.university.metadata?.confidence ?? null,
-      source: program.university.metadata?.source ?? null,
-    },
+      program.university.metadata?.confidence ?? null,
+      program.university.metadata?.source ?? null,
+    ),
   };
+}
+
+export interface FreshnessView {
+  verifiedAt: Date | null;
+  isStale: boolean;
+  confidence: string | null;
+  source: string | null;
+  /** Short label for a badge. Null when the record is verified and current. */
+  label: string | null;
+}
+
+/**
+ * Describes how much a student should trust a catalog record.
+ *
+ * "Never verified" and "verified but ageing" are different claims and get different
+ * labels — telling a student data "may be outdated" when it was never checked at all
+ * understates the problem. Demo records are called out explicitly, which is what the
+ * governing brief's §64 requires: seed data must never be mistakable for the real thing.
+ */
+export function describeFreshness(
+  verifiedAt: Date | null,
+  confidence: string | null,
+  source: string | null,
+): FreshnessView {
+  const isDemo = !!source && /demo/i.test(source);
+  const stale = isStale(verifiedAt, STALENESS_MONTHS.REQUIREMENTS);
+
+  const label = isDemo
+    ? "Demo data"
+    : verifiedAt === null
+      ? "Not yet verified"
+      : stale
+        ? "May be outdated"
+        : null;
+
+  return { verifiedAt, isStale: stale, confidence, source, label };
 }
 
 export async function getProgramDetail(id: string) {

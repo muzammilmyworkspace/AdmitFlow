@@ -1,6 +1,7 @@
 import "server-only";
 import { db } from "@/lib/db";
 import { ENTITLEMENTS, hasEntitlement } from "@/services/entitlement-service";
+import { describeFreshness } from "@/services/catalog-service";
 import type { ProgramAssessment } from "./scoring";
 
 // ============================================================================
@@ -51,7 +52,12 @@ export interface UnlockedResult {
   missingRequirements: string[];
   flags: string[];
   reasoning: string;
-  dataFreshness: { verifiedAt: string | null; isStale: boolean; source: string | null };
+  dataFreshness: {
+    verifiedAt: string | null;
+    isStale: boolean;
+    source: string | null;
+    label: string | null;
+  };
 }
 
 export interface LockedResult {
@@ -222,6 +228,13 @@ export async function projectResultsForUser(
         verifiedAt: verifiedAt?.toISOString() ?? null,
         isStale: !verifiedAt,
         source: program.university.metadata?.source ?? null,
+        // Same wording as the catalog, so a programme isn't described one way in search
+        // and another way in a match.
+        label: describeFreshness(
+          verifiedAt,
+          program.university.metadata?.confidence ?? null,
+          program.university.metadata?.source ?? null,
+        ).label,
       },
     };
   });

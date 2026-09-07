@@ -31,7 +31,12 @@ export interface UnlockedResultView {
   missingRequirements: string[];
   flags: string[];
   reasoning: string;
-  dataFreshness: { verifiedAt: string | null; isStale: boolean; source: string | null };
+  dataFreshness: {
+    verifiedAt: string | null;
+    isStale: boolean;
+    source: string | null;
+    label: string | null;
+  };
 }
 
 export interface LockedResultView {

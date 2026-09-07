@@ -3,20 +3,26 @@ import type { ButtonHTMLAttributes } from "react";
 import { cn } from "@/lib/cn";
 import { Spinner } from "./Spinner";
 
-// docs/07-frontend-architecture.md §6 — Button primitive. Design-token-driven, no
-// component hardcodes a raw color value (see docs/54-decision-log.md D-12).
+// docs/07-frontend-architecture.md §6 — Button primitive. Token-driven; no component
+// hardcodes a raw colour value (docs/54-decision-log.md D-12).
+//
+// Only `primary` carries the brand gradient. docs/07 §6 explicitly rules out gradients on
+// every button — used everywhere, a gradient stops signalling anything.
 
 const VARIANT_CLASSES = {
-  primary: "bg-primary text-white hover:bg-primary/90",
-  secondary: "bg-secondary text-white hover:bg-secondary/90",
-  ghost: "bg-transparent text-primary border border-text-secondary/30 hover:bg-bg",
-  danger: "bg-error text-white hover:bg-error/90",
+  primary:
+    "bg-brand-gradient text-white shadow-brand-glow hover:brightness-[1.07] active:brightness-95",
+  secondary: "bg-primary text-white shadow-sm hover:bg-primary-600",
+  ghost:
+    "bg-surface text-primary ring-1 ring-inset ring-border hover:bg-primary-50 hover:ring-primary-200",
+  subtle: "bg-primary-50 text-primary-700 hover:bg-primary-100",
+  danger: "bg-error text-white shadow-sm hover:brightness-110",
 } as const;
 
 const SIZE_CLASSES = {
-  sm: "h-9 px-3 text-sm",
-  md: "h-11 px-4 text-sm",
-  lg: "h-12 px-6 text-base",
+  sm: "h-9 px-3.5 text-sm gap-1.5",
+  md: "h-11 px-5 text-sm gap-2",
+  lg: "h-12 px-7 text-base gap-2.5",
 } as const;
 
 export interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
@@ -34,8 +40,12 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
       <button
         ref={ref}
         className={cn(
-          "inline-flex items-center justify-center gap-2 rounded-md font-medium",
-          "transition-colors duration-base disabled:cursor-not-allowed disabled:opacity-50",
+          "inline-flex items-center justify-center whitespace-nowrap rounded-md font-medium",
+          "transition-all duration-base",
+          // Lifts on hover, settles on press. Both are suppressed under
+          // prefers-reduced-motion by the global rule in globals.css.
+          "hover:-translate-y-px active:translate-y-0",
+          "disabled:pointer-events-none disabled:opacity-50",
           VARIANT_CLASSES[variant],
           SIZE_CLASSES[size],
           className,
