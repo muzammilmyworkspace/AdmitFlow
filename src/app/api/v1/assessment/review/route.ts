@@ -2,6 +2,7 @@ import type { NextRequest } from "next/server";
 import { z } from "zod";
 import { ok, fail } from "@/lib/response";
 import { parseBody, requestIdOf } from "@/lib/api-route";
+import { enforceRateLimit } from "@/lib/rate-limit";
 import { AppError } from "@/lib/errors";
 import { requireVerifiedActor, requireOwnProfileId } from "@/lib/auth/guards";
 import { getLatestAssessment } from "@/services/assessment/assessment-service";
@@ -54,6 +55,7 @@ export async function POST(request: NextRequest) {
   const requestId = requestIdOf(request);
   try {
     const actor = await requireVerifiedActor();
+    await enforceRateLimit("ASSESSMENT_REVIEW_REQUEST", actor.userId);
     await requireOwnProfileId(actor);
     const body = await parseBody(request, requestSchema);
 

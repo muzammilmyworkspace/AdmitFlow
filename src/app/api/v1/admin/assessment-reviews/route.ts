@@ -2,6 +2,7 @@ import type { NextRequest } from "next/server";
 import { z } from "zod";
 import { ok, fail } from "@/lib/response";
 import { parseBody, requestIdOf } from "@/lib/api-route";
+import { enforceRateLimit } from "@/lib/rate-limit";
 import { requirePermissionActor } from "@/lib/auth/guards";
 import { PERMISSIONS } from "@/lib/rbac";
 import { claimReview, completeReview, listReviewQueue } from "@/services/assessment/review-service";
@@ -45,6 +46,7 @@ export async function PATCH(request: NextRequest) {
   const requestId = requestIdOf(request);
   try {
     const actor = await requirePermissionActor(PERMISSIONS.ASSESSMENT_REVIEW_DELIVER);
+    await enforceRateLimit("REVIEW_QUEUE_ACTION", actor.userId);
     const body = await parseBody(request, actionSchema);
 
     if (body.action === "claim") {

@@ -37,6 +37,11 @@ export const RATE_LIMITS = {
   CHECKOUT: { limit: 15, windowMs: 60 * 1000 },
   BOOKING: { limit: 20, windowMs: 60 * 1000 },
   APPLICATION_SUBMIT: { limit: 10, windowMs: 60 * 1000 },
+  // A student opens one review per assessment, so this only has to stop a loop.
+  ASSESSMENT_REVIEW_REQUEST: { limit: 10, windowMs: 60 * 60 * 1000 },
+  // Staff claiming and delivering from the consultant queue. Generous, because a
+  // consultant working through a backlog is the expected case, not the abusive one.
+  REVIEW_QUEUE_ACTION: { limit: 120, windowMs: 60 * 1000 },
 } as const satisfies Record<string, RateLimitPolicy>;
 
 class MemoryRateLimitStore implements RateLimitStore {
