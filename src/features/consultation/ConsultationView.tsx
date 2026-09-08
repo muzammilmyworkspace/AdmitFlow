@@ -5,7 +5,7 @@ import { Card } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
 import { Badge } from "@/components/ui/Badge";
 import { Alert } from "@/components/ui/Alert";
-import { Skeleton } from "@/components/ui/Skeleton";
+import { SkeletonList } from "@/components/ui/Skeleton";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { apiGet, apiPost, apiDelete, ApiError } from "@/lib/api-client";
 
@@ -97,7 +97,7 @@ export function ConsultationView() {
     }
   }
 
-  if (isLoading) return <Skeleton className="h-64 w-full" />;
+  if (isLoading) return <SkeletonList count={3} />;
 
   const upcoming = bookings.filter(
     (b) => b.status === "CONFIRMED" || b.status === "HELD",

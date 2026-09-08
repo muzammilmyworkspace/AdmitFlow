@@ -3,7 +3,7 @@ import { CalendarDays } from "lucide-react";
 import { PageHeader } from "@/components/ui/PageHeader";
 import { ConsultationView } from "@/features/consultation/ConsultationView";
 
-export const metadata: Metadata = { title: "Consultation · AdmitFlow" };
+export const metadata: Metadata = { title: "Consultation" };
 
 export default function ConsultationPage() {
   return (

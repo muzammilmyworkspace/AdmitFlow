@@ -9,7 +9,7 @@ import { Select } from "@/components/ui/Select";
 import { Textarea } from "@/components/ui/Textarea";
 import { FormField } from "@/components/ui/FormField";
 import { Alert } from "@/components/ui/Alert";
-import { Skeleton } from "@/components/ui/Skeleton";
+import { SkeletonList } from "@/components/ui/Skeleton";
 import { apiGet, apiPatch, ApiError } from "@/lib/api-client";
 
 interface AdminUser {
@@ -78,7 +78,7 @@ export function AdminUsersView() {
     }
   }
 
-  if (isLoading) return <Skeleton className="h-64 w-full" />;
+  if (isLoading) return <SkeletonList count={4} />;
 
   return (
     <div>

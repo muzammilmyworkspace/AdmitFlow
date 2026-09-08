@@ -3,7 +3,7 @@ import { University } from "lucide-react";
 import { PageHeader } from "@/components/ui/PageHeader";
 import { UniversitySearch } from "@/features/universities/UniversitySearch";
 
-export const metadata: Metadata = { title: "Universities · AdmitFlow" };
+export const metadata: Metadata = { title: "Universities" };
 
 export default function UniversitiesPage() {
   return (

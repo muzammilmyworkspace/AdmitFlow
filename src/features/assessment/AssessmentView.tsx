@@ -5,8 +5,9 @@ import { Info, Lock, RefreshCw, Sparkles } from "lucide-react";
 import { Card } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
 import { Alert } from "@/components/ui/Alert";
-import { Skeleton } from "@/components/ui/Skeleton";
+import { SkeletonCard } from "@/components/ui/Skeleton";
 import { apiGet, apiPost, ApiError } from "@/lib/api-client";
+import { cn } from "@/lib/cn";
 import { MatchCard } from "./MatchCard";
 import { LockedMatchCard } from "./LockedMatchCard";
 import { LockedZone } from "./LockedZone";
@@ -31,9 +32,25 @@ const ZONE_BLURB: Record<string, string> = {
  * The point of showing any is that a student should be able to see the shape of what
  * they're missing sitting right beside what they can read. The point of capping it is
  * that forty identical locked cards is not persuasive, it's noise — the remainder is
- * better said as a number in the panel underneath.
+ * better said as a number.
+ *
+ * Three fills a desktop row. On a phone that row becomes three full-height cards stacked,
+ * which pushed the matches page past 5,700px — so the extras are dropped below `sm` with
+ * CSS rather than with a media query in JS, which would differ between the server and
+ * client renders.
  */
 const LOCKED_PREVIEW_PER_ZONE = 3;
+const LOCKED_PREVIEW_MOBILE = 1;
+
+function RemainingLocked({ count, className }: { count: number; className?: string }) {
+  if (count <= 0) return null;
+  return (
+    <p className={cn("text-sm text-text-secondary", className)}>
+      <Lock className="mr-1.5 inline h-3.5 w-3.5 text-text-muted" aria-hidden />
+      and {count} more {count === 1 ? "match" : "matches"} in this group.
+    </p>
+  );
+}
 
 export function AssessmentView() {
   const [data, setData] = useState<AssessmentResponse | null>(null);
@@ -86,10 +103,11 @@ export function AssessmentView() {
 
   if (isLoading) {
     return (
-      <div className="grid gap-5 sm:grid-cols-2 xl:grid-cols-3">
-        <Skeleton className="h-80 w-full" />
-        <Skeleton className="h-80 w-full" />
-        <Skeleton className="h-80 w-full" />
+      <div className="grid gap-5 sm:grid-cols-2 xl:grid-cols-3" role="status" aria-label="Loading your matches">
+        <SkeletonCard lines={5} />
+        <SkeletonCard lines={5} />
+        <SkeletonCard lines={5} />
+        <span className="sr-only">Loading your matches…</span>
       </div>
     );
   }
@@ -216,22 +234,26 @@ export function AssessmentView() {
               {zoneResults.map((result) => (
                 <MatchCard key={result.programId} result={result} />
               ))}
-              {lockedPreview.map((result) => (
+              {lockedPreview.map((result, index) => (
                 <LockedMatchCard
                   key={result.placeholderId}
                   result={result}
                   onUnlock={startUnlock}
+                  className={index >= LOCKED_PREVIEW_MOBILE ? "hidden sm:flex" : undefined}
                 />
               ))}
             </div>
 
-            {remainingLocked > 0 && (
-              <p className="mt-3.5 text-sm text-text-secondary">
-                <Lock className="mr-1.5 inline h-3.5 w-3.5 text-text-muted" aria-hidden />
-                and {remainingLocked} more {remainingLocked === 1 ? "match" : "matches"} in this
-                group.
-              </p>
-            )}
+            {/* Two lines, one per breakpoint: a different number of cards is on screen, so
+                a single count would be wrong on one of them. */}
+            <RemainingLocked
+              count={remainingLocked}
+              className="mt-3.5 hidden sm:block"
+            />
+            <RemainingLocked
+              count={zoneLocked.length - Math.min(zoneLocked.length, LOCKED_PREVIEW_MOBILE)}
+              className="mt-3.5 sm:hidden"
+            />
           </section>
         );
       })}

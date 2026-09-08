@@ -3,7 +3,7 @@ import { Send } from "lucide-react";
 import { PageHeader } from "@/components/ui/PageHeader";
 import { ApplicationsView } from "@/features/applications/ApplicationsView";
 
-export const metadata: Metadata = { title: "Applications · AdmitFlow" };
+export const metadata: Metadata = { title: "Applications" };
 
 export default function ApplicationsPage() {
   return (

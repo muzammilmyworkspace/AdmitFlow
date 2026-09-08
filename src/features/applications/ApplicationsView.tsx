@@ -6,7 +6,7 @@ import { Card } from "@/components/ui/Card";
 import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
 import { Alert } from "@/components/ui/Alert";
-import { Skeleton } from "@/components/ui/Skeleton";
+import { SkeletonList } from "@/components/ui/Skeleton";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { apiGet, ApiError } from "@/lib/api-client";
 
@@ -55,7 +55,7 @@ export function ApplicationsView() {
       .finally(() => setIsLoading(false));
   }, [load]);
 
-  if (isLoading) return <Skeleton className="h-40 w-full" />;
+  if (isLoading) return <SkeletonList count={2} />;
 
   if (error) return <Alert tone="error">{error}</Alert>;
 

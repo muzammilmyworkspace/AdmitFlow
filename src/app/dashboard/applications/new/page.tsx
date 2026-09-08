@@ -3,7 +3,7 @@ import type { Metadata } from "next";
 import { NewApplicationView } from "@/features/applications/NewApplicationView";
 import { Skeleton } from "@/components/ui/Skeleton";
 
-export const metadata: Metadata = { title: "Start an application · AdmitFlow" };
+export const metadata: Metadata = { title: "Start an application" };
 
 export default function NewApplicationPage() {
   return (

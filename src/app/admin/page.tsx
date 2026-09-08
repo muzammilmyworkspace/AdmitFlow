@@ -4,7 +4,7 @@ import { getPlatformStats } from "@/services/admin-service";
 import { Card } from "@/components/ui/Card";
 import { Badge } from "@/components/ui/Badge";
 
-export const metadata: Metadata = { title: "Admin · AdmitFlow" };
+export const metadata: Metadata = { title: "Admin" };
 
 export default async function AdminOverviewPage() {
   const stats = await getPlatformStats();

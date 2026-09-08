@@ -9,7 +9,7 @@ import { Button } from "@/components/ui/Button";
 import { Badge } from "@/components/ui/Badge";
 import { FormField } from "@/components/ui/FormField";
 import { Alert } from "@/components/ui/Alert";
-import { Skeleton } from "@/components/ui/Skeleton";
+import { SkeletonList } from "@/components/ui/Skeleton";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { apiGet, ApiError } from "@/lib/api-client";
 
@@ -157,10 +157,7 @@ export function UniversitySearch() {
       )}
 
       {isLoading ? (
-        <div className="space-y-3">
-          <Skeleton className="h-28 w-full" />
-          <Skeleton className="h-28 w-full" />
-        </div>
+        <SkeletonList count={3} />
       ) : programs.length === 0 ? (
         <EmptyState
           title="No programmes matched"

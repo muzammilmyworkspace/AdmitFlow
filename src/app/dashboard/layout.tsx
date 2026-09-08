@@ -42,7 +42,7 @@ export default async function DashboardLayout({ children }: { children: React.Re
         isAdmin={actor.roles.includes("ADMIN") || actor.roles.includes("SUPER_ADMIN")}
       />
 
-      <main className="mx-auto w-full max-w-6xl px-4 py-9">{children}</main>
+      <main id="main" className="mx-auto w-full max-w-6xl px-4 py-9">{children}</main>
     </div>
   );
 }

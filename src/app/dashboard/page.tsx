@@ -20,7 +20,7 @@ import { EmptyState } from "@/components/ui/EmptyState";
 import { JourneyRoadmap } from "@/features/dashboard/JourneyRoadmap";
 import { GlowField } from "@/components/brand/WorldMotif";
 
-export const metadata: Metadata = { title: "Dashboard · AdmitFlow" };
+export const metadata: Metadata = { title: "Dashboard" };
 
 export default async function DashboardPage() {
   const actor = await getActor();

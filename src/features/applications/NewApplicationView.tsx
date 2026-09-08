@@ -6,7 +6,7 @@ import { Card } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
 import { Alert } from "@/components/ui/Alert";
 import { Badge } from "@/components/ui/Badge";
-import { Skeleton } from "@/components/ui/Skeleton";
+import { SkeletonList } from "@/components/ui/Skeleton";
 import { apiGet, apiPost, ApiError } from "@/lib/api-client";
 
 interface IntakeOption {
@@ -66,7 +66,7 @@ export function NewApplicationView() {
   }
 
   if (!programId) return <Alert tone="error">No programme was specified.</Alert>;
-  if (isLoading) return <Skeleton className="h-64 w-full" />;
+  if (isLoading) return <SkeletonList count={3} />;
   if (!program) return <Alert tone="error">{error ?? "Programme not found."}</Alert>;
 
   const openIntakes = program.intakes.filter((i) => i.status !== "CLOSED");

@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { ApplicationDetailView } from "@/features/applications/ApplicationDetailView";
 
-export const metadata: Metadata = { title: "Application · AdmitFlow" };
+export const metadata: Metadata = { title: "Application" };
 
 export default async function ApplicationDetailPage({
   params,

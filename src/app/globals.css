@@ -4,6 +4,44 @@
 
 @import "../styles/tokens.css";
 
+/*
+ * Inter, self-hosted.
+ *
+ * The Tailwind token has named Inter as the UI face since Phase 2, but nothing ever
+ * loaded it — every screen was silently rendering in the system fallback. It is served
+ * from /public rather than from Google's CDN on purpose: a font request from the
+ * student's browser to a third party is a data transfer the privacy documentation would
+ * otherwise have to account for (docs/42-gdpr-and-data-privacy.md), and it is one more
+ * network dependency on the critical render path.
+ *
+ * One variable file per subset covers 400-700, so the four weights the UI uses cost a
+ * single download. next/font/google is avoided for the reason recorded in the root
+ * layout: it triggers a home-directory scan that fails the build on Windows.
+ */
+@font-face {
+  font-family: "Inter";
+  font-style: normal;
+  font-weight: 400 700;
+  font-display: swap;
+  src: url("/fonts/inter-latin.woff2") format("woff2");
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC,
+    U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215,
+    U+FEFF, U+FFFD;
+}
+
+/* Accented characters in names — Ş, ğ, ő, ā — fall in this range. A student whose own
+   name renders in a different face from the rest of the page notices. */
+@font-face {
+  font-family: "Inter";
+  font-style: normal;
+  font-weight: 400 700;
+  font-display: swap;
+  src: url("/fonts/inter-latin-ext.woff2") format("woff2");
+  unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304,
+    U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB,
+    U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF;
+}
+
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after {
     animation-duration: 0.01ms !important;
@@ -23,4 +61,17 @@ body {
 :focus-visible {
   outline: 2px solid var(--color-accent);
   outline-offset: 2px;
+}
+
+/* Skip link — visually hidden until focused, then a real, visible control. */
+.skip-link {
+  position: absolute;
+  left: 1rem;
+  top: 0;
+  z-index: 100;
+  transform: translateY(-150%);
+  transition: transform var(--duration-fast) ease-out;
+}
+.skip-link:focus {
+  transform: translateY(1rem);
 }

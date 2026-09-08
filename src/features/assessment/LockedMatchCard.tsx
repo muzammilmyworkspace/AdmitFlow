@@ -63,16 +63,21 @@ function Bar({ seed, index, min, max }: { seed: string; index: number; min: numb
 export function LockedMatchCard({
   result,
   onUnlock,
+  className,
 }: {
   result: LockedResultView;
   onUnlock: () => void;
+  className?: string;
 }) {
   const id = result.placeholderId;
   const zoneLabel = ZONE_LABEL[result.zone] ?? result.zone;
 
   return (
     <article
-      className="group relative flex flex-col overflow-hidden rounded-lg border border-dashed border-border bg-surface/60 shadow-sm transition-all duration-base hover:-translate-y-0.5 hover:border-primary-300 hover:shadow-md"
+      className={cn(
+        "group relative flex flex-col overflow-hidden rounded-lg border border-dashed border-border bg-surface/60 shadow-sm transition-all duration-base hover:-translate-y-0.5 hover:border-primary-300 hover:shadow-md",
+        className,
+      )}
       aria-label={`A locked ${zoneLabel.toLowerCase()}. Unlock to see this university.`}
     >
       <div className={cn("h-1 w-full", ZONE_ACCENT[result.zone] ?? "bg-border")} aria-hidden />

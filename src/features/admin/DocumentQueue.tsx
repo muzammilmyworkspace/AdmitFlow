@@ -8,7 +8,7 @@ import { Textarea } from "@/components/ui/Textarea";
 import { FormField } from "@/components/ui/FormField";
 import { Alert } from "@/components/ui/Alert";
 import { EmptyState } from "@/components/ui/EmptyState";
-import { Skeleton } from "@/components/ui/Skeleton";
+import { SkeletonList } from "@/components/ui/Skeleton";
 import { apiGet, apiPatch, ApiError } from "@/lib/api-client";
 
 interface QueueItem {
@@ -79,7 +79,7 @@ export function DocumentQueue() {
     }
   }
 
-  if (isLoading) return <Skeleton className="h-48 w-full" />;
+  if (isLoading) return <SkeletonList count={3} />;
 
   if (items.length === 0) {
     return (

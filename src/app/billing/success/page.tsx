@@ -4,7 +4,7 @@ import { Card } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
 import { Alert } from "@/components/ui/Alert";
 
-export const metadata: Metadata = { title: "Payment received · AdmitFlow" };
+export const metadata: Metadata = { title: "Payment received" };
 
 // Note what this page does NOT do: it does not grant anything, and it does not read a
 // "paid=true" parameter. It is a landing page. Access is decided by entitlements the

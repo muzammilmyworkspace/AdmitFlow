@@ -4,7 +4,7 @@ import { VerifyEmailForm } from "@/features/auth/VerifyEmailForm";
 import { Card } from "@/components/ui/Card";
 import { Spinner } from "@/components/ui/Spinner";
 
-export const metadata: Metadata = { title: "Verify your email · AdmitFlow" };
+export const metadata: Metadata = { title: "Verify your email" };
 
 export default function VerifyEmailPage() {
   return (

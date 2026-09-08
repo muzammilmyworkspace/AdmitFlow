@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { SignupForm } from "@/features/auth/SignupForm";
 
-export const metadata: Metadata = { title: "Create your account · AdmitFlow" };
+export const metadata: Metadata = { title: "Create your account" };
 
 export default function SignupPage() {
   return <SignupForm />;

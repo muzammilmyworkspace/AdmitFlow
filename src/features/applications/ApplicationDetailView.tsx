@@ -9,7 +9,7 @@ import { Button } from "@/components/ui/Button";
 import { Alert } from "@/components/ui/Alert";
 import { Select } from "@/components/ui/Select";
 import { FormField } from "@/components/ui/FormField";
-import { Skeleton } from "@/components/ui/Skeleton";
+import { SkeletonList } from "@/components/ui/Skeleton";
 import { apiGet, apiPatch, apiPost, ApiError } from "@/lib/api-client";
 
 interface ReadinessCheck {
@@ -90,7 +90,7 @@ export function ApplicationDetailView({ applicationId }: { applicationId: string
     window.location.href = result.checkoutUrl;
   }
 
-  if (isLoading) return <Skeleton className="h-64 w-full" />;
+  if (isLoading) return <SkeletonList count={3} />;
   if (!app) return <Alert tone="error">{error ?? "Application not found."}</Alert>;
 
   const attachedIds = new Set(app.documents.map((d) => d.id));

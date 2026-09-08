@@ -3,7 +3,7 @@ import { FolderLock } from "lucide-react";
 import { PageHeader } from "@/components/ui/PageHeader";
 import { VaultView } from "@/features/vault/VaultView";
 
-export const metadata: Metadata = { title: "Document vault · AdmitFlow" };
+export const metadata: Metadata = { title: "Document vault" };
 
 export default function VaultPage() {
   return (

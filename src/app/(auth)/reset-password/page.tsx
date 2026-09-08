@@ -4,7 +4,7 @@ import { ResetPasswordForm } from "@/features/auth/ResetPasswordForm";
 import { Card } from "@/components/ui/Card";
 import { Spinner } from "@/components/ui/Spinner";
 
-export const metadata: Metadata = { title: "Choose a new password · AdmitFlow" };
+export const metadata: Metadata = { title: "Choose a new password" };
 
 export default function ResetPasswordPage() {
   return (

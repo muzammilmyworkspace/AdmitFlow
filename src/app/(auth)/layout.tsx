@@ -80,7 +80,7 @@ export default function AuthLayout({ children }: { children: React.ReactNode }) 
       </aside>
 
       {/* Form panel */}
-      <main className="flex min-h-screen flex-col justify-center bg-bg px-4 py-12 sm:px-8">
+      <main id="main" className="flex min-h-screen flex-col justify-center bg-bg px-4 py-12 sm:px-8">
         <div className="mx-auto w-full max-w-md">
           <Link href="/" className="mb-8 inline-flex lg:hidden">
             <Logo />

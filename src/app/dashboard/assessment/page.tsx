@@ -7,7 +7,7 @@ import { getActor } from "@/lib/auth/guards";
 import { AssessmentView } from "@/features/assessment/AssessmentView";
 import { Alert } from "@/components/ui/Alert";
 
-export const metadata: Metadata = { title: "My matches · AdmitFlow" };
+export const metadata: Metadata = { title: "My matches" };
 
 export default async function AssessmentPage() {
   const actor = await getActor();

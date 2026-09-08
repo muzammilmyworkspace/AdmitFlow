@@ -5,7 +5,7 @@ import { getEnv } from "@/lib/env";
 import { DevCheckoutView } from "@/features/billing/DevCheckoutView";
 import { Skeleton } from "@/components/ui/Skeleton";
 
-export const metadata: Metadata = { title: "Checkout · AdmitFlow" };
+export const metadata: Metadata = { title: "Checkout" };
 
 // Development stand-in for the payment provider's hosted checkout page.
 //

@@ -7,7 +7,7 @@ import { Badge } from "@/components/ui/Badge";
 import { Alert } from "@/components/ui/Alert";
 import { Select } from "@/components/ui/Select";
 import { FormField } from "@/components/ui/FormField";
-import { Skeleton } from "@/components/ui/Skeleton";
+import { SkeletonList } from "@/components/ui/Skeleton";
 import { apiGet, apiPost, apiDelete, ApiError } from "@/lib/api-client";
 
 interface DocumentRow {
@@ -142,8 +142,7 @@ export function VaultView() {
   if (isLoading) {
     return (
       <div className="space-y-3">
-        <Skeleton className="h-24 w-full" />
-        <Skeleton className="h-24 w-full" />
+        <SkeletonList count={2} />
       </div>
     );
   }

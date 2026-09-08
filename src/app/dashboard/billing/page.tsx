@@ -9,7 +9,7 @@ import { Card } from "@/components/ui/Card";
 import { Badge } from "@/components/ui/Badge";
 import { EmptyState } from "@/components/ui/EmptyState";
 
-export const metadata: Metadata = { title: "Billing · AdmitFlow" };
+export const metadata: Metadata = { title: "Billing" };
 
 export default async function BillingPage() {
   const actor = await getActor();
