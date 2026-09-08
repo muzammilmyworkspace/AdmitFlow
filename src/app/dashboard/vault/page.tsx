@@ -1,16 +1,24 @@
 import type { Metadata } from "next";
+import { FolderLock } from "lucide-react";
+import { PageHeader } from "@/components/ui/PageHeader";
 import { VaultView } from "@/features/vault/VaultView";
 
 export const metadata: Metadata = { title: "Document vault · AdmitFlow" };
 
 export default function VaultPage() {
   return (
-    <div>
-      <h1 className="mb-1 text-2xl font-semibold text-text-primary">Document vault</h1>
-      <p className="mb-6 text-sm text-text-secondary">
-        Your documents are stored privately. Nobody can reach them without a short-lived link
-        issued to you specifically.
-      </p>
+    <div className="animate-fade-in">
+      <PageHeader
+        icon={FolderLock}
+        eyebrow="Your files"
+        title="Document vault"
+        description={
+          <>
+            Your documents are stored privately. Nobody can reach them without a short-lived link
+            issued to you specifically.
+          </>
+        }
+      />
       <VaultView />
     </div>
   );

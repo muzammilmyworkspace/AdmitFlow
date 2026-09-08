@@ -1,5 +1,7 @@
 import type { Metadata } from "next";
 import { redirect } from "next/navigation";
+import { CreditCard } from "lucide-react";
+import { PageHeader } from "@/components/ui/PageHeader";
 import { getActor } from "@/lib/auth/guards";
 import { listPurchases } from "@/services/payments/billing-service";
 import { listEntitlements } from "@/services/entitlement-service";
@@ -19,11 +21,13 @@ export default async function BillingPage() {
   ]);
 
   return (
-    <div>
-      <h1 className="mb-1 text-2xl font-semibold text-text-primary">Billing</h1>
-      <p className="mb-6 text-sm text-text-secondary">
-        Everything you&apos;ve paid for, and what it unlocked.
-      </p>
+    <div className="animate-fade-in">
+      <PageHeader
+        icon={CreditCard}
+        eyebrow="Your account"
+        title="Billing"
+        description="Everything you've paid for, and what it unlocked."
+      />
 
       <Card className="mb-6">
         <h2 className="mb-3 text-sm font-semibold uppercase tracking-wide text-text-secondary">

@@ -9,7 +9,9 @@ export interface CardProps extends HTMLAttributes<HTMLDivElement> {
 }
 
 const TONE_CLASSES = {
-  default: "bg-surface border-border",
+  // Slightly translucent over the shell's ambient wash, so a card reads as a pane
+  // floating on the page rather than a white rectangle pasted onto a white page.
+  default: "bg-surface/95 border-border backdrop-blur-sm",
   brand: "bg-brand-gradient-soft border-secondary-200",
   warning: "bg-warning/[0.04] border-warning/25",
 } as const;

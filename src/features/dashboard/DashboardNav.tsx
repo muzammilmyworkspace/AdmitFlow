@@ -31,13 +31,25 @@ const LINKS = [
   { href: "/dashboard/billing", label: "Billing", icon: CreditCard },
 ];
 
+/** Initials for the avatar. Falls back to the email only when there is no name yet. */
+function initialsOf(firstName: string | null, lastName: string | null, email: string): string {
+  const first = firstName?.trim()?.[0];
+  const last = lastName?.trim()?.[0];
+  if (first) return (first + (last ?? "")).toUpperCase();
+  return (email[0] ?? "?").toUpperCase();
+}
+
 export function DashboardNav({
-  name,
+  firstName,
+  lastName,
+  email,
   accountStatus,
   isStaff,
   isAdmin,
 }: {
-  name: string;
+  firstName: string | null;
+  lastName: string | null;
+  email: string;
   accountStatus: string;
   isStaff: boolean;
   isAdmin: boolean;
@@ -47,13 +59,14 @@ export function DashboardNav({
   const [menuOpen, setMenuOpen] = useState(false);
 
   const links = isAdmin ? [...LINKS, { href: "/admin", label: "Admin", icon: Settings2 }] : LINKS;
+  const displayName = firstName ?? email;
 
   function isActive(href: string) {
     return href === "/dashboard" ? pathname === href : pathname.startsWith(href);
   }
 
   return (
-    <header className="sticky top-0 z-20 border-b border-border bg-surface/85 backdrop-blur-md">
+    <header className="sticky top-0 z-20 border-b border-border/70 bg-surface/80 shadow-sm backdrop-blur-xl">
       <div className="mx-auto flex w-full max-w-6xl items-center gap-6 px-4 py-3">
         <Link href="/dashboard" className="shrink-0">
           <Logo />
@@ -71,13 +84,16 @@ export function DashboardNav({
                 href={link.href}
                 aria-current={active ? "page" : undefined}
                 className={cn(
-                  "flex items-center gap-1.5 whitespace-nowrap rounded-md px-2.5 py-2 text-sm font-medium transition-colors duration-fast",
+                  "relative flex items-center gap-1.5 whitespace-nowrap rounded-md px-2.5 py-2 text-sm font-medium transition-colors duration-fast",
                   active
-                    ? "bg-primary-50 text-primary-700"
-                    : "text-text-secondary hover:bg-bg hover:text-text-primary",
+                    ? "bg-brand-gradient-soft text-primary-700 ring-1 ring-inset ring-secondary-200"
+                    : "text-text-secondary hover:bg-primary-50/60 hover:text-text-primary",
                 )}
               >
-                <Icon className="h-4 w-4 shrink-0" aria-hidden />
+                <Icon
+                  className={cn("h-4 w-4 shrink-0", active && "text-secondary-600")}
+                  aria-hidden
+                />
                 {link.label}
               </Link>
             );
@@ -95,18 +111,32 @@ export function DashboardNav({
               Staff
             </Badge>
           )}
+
+          {/* The avatar is the small piece of the shell that says "this is your account",
+              which a bare Sign out link never did. */}
+          <span
+            title={email}
+            className="hidden h-9 w-9 items-center justify-center rounded-full bg-brand-gradient text-xs font-semibold text-white shadow-brand-glow sm:flex"
+            aria-hidden
+          >
+            {initialsOf(firstName, lastName, email)}
+          </span>
+          <span className="hidden max-w-[10rem] truncate text-sm font-medium text-text-primary xl:inline">
+            {displayName}
+          </span>
+
           <button
             type="button"
-            title={name}
+            title={`Sign out of ${email}`}
             onClick={() => apiPost("/api/v1/auth/logout").then(() => (window.location.href = "/login"))}
-            className="flex items-center gap-1.5 whitespace-nowrap rounded-md px-2.5 py-2 text-sm font-medium text-text-secondary transition-colors duration-fast hover:bg-bg hover:text-text-primary"
+            className="flex items-center gap-1.5 whitespace-nowrap rounded-md px-2.5 py-2 text-sm font-medium text-text-secondary transition-colors duration-fast hover:bg-primary-50/60 hover:text-text-primary"
           >
             <LogOut className="h-4 w-4 shrink-0" aria-hidden />
             <span className="hidden sm:inline">Sign out</span>
           </button>
           <button
             type="button"
-            className="rounded-md p-2 text-text-secondary hover:bg-bg lg:hidden"
+            className="rounded-md p-2 text-text-secondary hover:bg-primary-50/60 lg:hidden"
             aria-expanded={menuOpen}
             aria-controls="mobile-nav"
             onClick={() => setMenuOpen((v) => !v)}
@@ -117,8 +147,13 @@ export function DashboardNav({
         </div>
       </div>
 
+      {/* Brand hairline: the logo's own green-to-navy travel, run along the full width.
+          It is the cheapest possible way to make the shell feel like a product rather
+          than a template. */}
+      <div className="h-px w-full bg-gradient-to-r from-secondary-500/70 via-primary-500/50 to-transparent" />
+
       {menuOpen && (
-        <nav id="mobile-nav" aria-label="Main" className="border-t border-border lg:hidden">
+        <nav id="mobile-nav" aria-label="Main" className="border-t border-border bg-surface lg:hidden">
           <ul className="mx-auto w-full max-w-6xl px-2 py-2">
             {links.map((link) => {
               const Icon = link.icon;
@@ -131,7 +166,9 @@ export function DashboardNav({
                     aria-current={active ? "page" : undefined}
                     className={cn(
                       "flex items-center gap-2.5 rounded-md px-3 py-3 text-sm font-medium",
-                      active ? "bg-primary-50 text-primary-700" : "text-text-primary hover:bg-bg",
+                      active
+                        ? "bg-brand-gradient-soft text-primary-700"
+                        : "text-text-primary hover:bg-primary-50/60",
                     )}
                   >
                     <Icon className="h-4 w-4" aria-hidden />

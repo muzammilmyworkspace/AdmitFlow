@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 import Link from "next/link";
+import { ScanSearch } from "lucide-react";
+import { PageHeader } from "@/components/ui/PageHeader";
 import { getActor } from "@/lib/auth/guards";
 import { AssessmentView } from "@/features/assessment/AssessmentView";
 import { Alert } from "@/components/ui/Alert";
@@ -15,8 +17,12 @@ export default async function AssessmentPage() {
   // is redirected to the wizard rather than shown an engine error.
   if (actor.status === "ONBOARDING") {
     return (
-      <div>
-        <h1 className="mb-4 text-2xl font-semibold text-text-primary">My matches</h1>
+      <div className="animate-fade-in">
+        <PageHeader
+          icon={ScanSearch}
+          eyebrow="Your results"
+          title="My matches"
+        />
         <Alert tone="info">
           Finish your profile first — the assessment is only as accurate as what it is given.{" "}
           <Link href="/onboarding" className="font-medium underline">
@@ -29,11 +35,17 @@ export default async function AssessmentPage() {
   }
 
   return (
-    <div>
-      <h1 className="mb-1 text-2xl font-semibold text-text-primary">My matches</h1>
-      <p className="mb-6 text-sm text-text-secondary">
-        Every score below comes with its reasoning — open “Why this score?” on any card.
-      </p>
+    <div className="animate-fade-in">
+      <PageHeader
+        icon={ScanSearch}
+        eyebrow="Your results"
+        title="My matches"
+        description={
+          <>
+            Every score below comes with its reasoning — open “Why this score?” on any card.
+          </>
+        }
+      />
       <AssessmentView />
     </div>
   );

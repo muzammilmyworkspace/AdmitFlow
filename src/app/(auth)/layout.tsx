@@ -62,7 +62,7 @@ export default function AuthLayout({ children }: { children: React.ReactNode }) 
             {ASSURANCES.map(({ icon: Icon, title, body }) => (
               <li key={title} className="flex gap-3.5">
                 <span className="mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-white/10 ring-1 ring-inset ring-white/15">
-                  <Icon className="h-4.5 w-4.5 text-secondary-200" aria-hidden />
+                  <Icon className="h-5 w-5 text-secondary-200" aria-hidden />
                 </span>
                 <span>
                   <span className="block text-sm font-medium text-white">{title}</span>

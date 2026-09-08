@@ -292,3 +292,53 @@ revisitable if students actually ask for it.
 **Future implications:** `CONSULTANT` now carries a real permission
 (`assessment_review:deliver`) rather than being an empty bundle, and `AuditActorType` gained
 `CONSULTANT` so their actions are distinguishable from an admin's in the audit trail.
+
+---
+
+## D-21. The signed-in shell gets an atmosphere, not just a layout
+
+**Context:** The signed-out surfaces carry the brand — the split-screen auth panel, the
+gradient landing hero — and then a student logs in and lands on flat `#f8f9fa` with white
+cards on it. Every inner page opened with a bare `<h1>` and a line of grey text, so
+"Universities", "Documents" and "Billing" were visually indistinguishable from each other
+and from a plain document. The product a student is about to trust with their university
+applications looked like an internal admin tool at exactly the moment it needed to look
+like a product.
+
+**Chosen:** Three pieces, all in the shell rather than in individual pages.
+
+`AmbientBackground` — a fixed, decorative backdrop behind all signed-in content: a cool
+wash under the sticky header, three heavily blurred brand-colour auroras following the
+logo's own Green → Navy travel, and a masked dot grid. It is what turns "blank" into
+"paper": the page gains a surface without gaining any content.
+
+`PageHeader` — the masthead every inner page now opens with. The brand-gradient icon tile
+is the piece doing most of the work: a fixed, recognisable anchor in the same position on
+every page.
+
+Nav — the user's own initials and first name in a brand-gradient avatar, an active-link
+pill in the soft brand gradient, and a green-to-navy hairline under the whole bar.
+
+**Two bugs this surfaced, both worth recording because both are silent:**
+
+The first version of `AmbientBackground` was invisible. It painted `primary-50` (#F2F6FA)
+over a `--color-bg` of #f8f9fa — a two-point difference. Anything intended to be seen
+against this background has to be stated as explicit rgba rather than as a palette tint
+that can collapse into it.
+
+The second version was still invisible, for a different reason: the shell's wrapper
+carried `bg-bg`, and since `position: relative` with `z-index: auto` creates no stacking
+context, that background painted straight over the `-z-10` ambient layer. The page colour
+now comes from `body`, which paints below everything.
+
+**Tradeoffs:** Decorative DOM on every signed-in page. It is one fixed element, entirely
+static, `pointer-events-none` and `aria-hidden`, so it costs nothing at runtime, never
+intercepts a click and never reaches a screen reader. Static also matters for correctness:
+a random or time-based value would differ between the server and client renders and
+produce a hydration mismatch.
+
+**Also fixed in passing:** `h-4.5`/`w-4.5` appeared in five places. Tailwind's default
+spacing scale has no 4.5, so those were dead classes silently rendering at the icon's
+intrinsic size. And `EmptyState`'s description carried `mx-auto`, which kept centring the
+block however the caller aligned the container — so on the dashboard the text sat visibly
+indented under its own heading. Alignment is now a prop.

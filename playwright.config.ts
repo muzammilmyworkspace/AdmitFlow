@@ -8,6 +8,10 @@ export default defineConfig({
   timeout: 60_000,
   expect: { timeout: 10_000 },
   fullyParallel: false, // the journey specs share a database; ordering keeps them readable
+  // One worker. Two of these drive a Next dev server that compiles routes on demand, and
+  // the contention alone pushes sign-up past its timeout — reported as an assertion
+  // failure in whichever spec happened to be second, which is a lie about the product.
+  workers: 1,
   retries: 0,
   reporter: [["list"]],
   use: {

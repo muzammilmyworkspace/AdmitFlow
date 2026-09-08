@@ -5,6 +5,7 @@ import {
   ArrowRight,
   CalendarClock,
   FileCheck2,
+  Globe2,
   ScanSearch,
   Send,
   Sparkles,
@@ -29,15 +30,21 @@ export default async function DashboardPage() {
 
   return (
     <div className="animate-fade-in">
-      <div className="mb-8">
-        <h1 className="text-3xl font-semibold tracking-tight text-text-primary">
-          {/* Their own name, never an email prefix — "Welcome back, a.khan-1788" is a
-              worse greeting than none at all. */}
-          Welcome back{summary.firstName ? `, ${summary.firstName}` : ""}
-        </h1>
-        <p className="mt-1 text-sm text-text-secondary">
-          Here&apos;s where your application stands today.
-        </p>
+      <div className="mb-8 flex flex-wrap items-center justify-between gap-4">
+        <div>
+          <p className="mb-1.5 inline-flex items-center gap-1.5 rounded-full bg-secondary-50 px-3 py-1 text-xs font-medium text-secondary-700 ring-1 ring-inset ring-secondary-200">
+            <Globe2 className="h-3.5 w-3.5" aria-hidden />
+            Applying abroad, on your own terms
+          </p>
+          <h1 className="text-3xl font-semibold tracking-tight text-text-primary sm:text-4xl">
+            {/* Their own name, never an email prefix — "Welcome back, a.khan-1788" is a
+                worse greeting than none at all. */}
+            Welcome back{summary.firstName ? `, ${summary.firstName}` : ""}
+          </h1>
+          <p className="mt-1.5 text-sm text-text-secondary">
+            Here&apos;s where your application stands today.
+          </p>
+        </div>
       </div>
 
       {/* The single most useful thing to do next, given precedence over everything else
@@ -74,7 +81,7 @@ export default async function DashboardPage() {
         <Card>
           <div className="mb-4 flex items-center gap-2.5">
             <span className="flex h-9 w-9 items-center justify-center rounded-lg bg-brand-gradient-soft ring-1 ring-inset ring-secondary-200">
-              <ScanSearch className="h-4.5 w-4.5 text-secondary-700" aria-hidden />
+              <ScanSearch className="h-5 w-5 text-secondary-700" aria-hidden />
             </span>
             <h2 className="font-semibold text-text-primary">Your matches</h2>
           </div>
@@ -113,7 +120,8 @@ export default async function DashboardPage() {
                   <Button size="sm">Complete profile</Button>
                 </Link>
               }
-              className="border-0 px-0 py-4 text-left"
+              align="left"
+              className="border-0 px-0 py-4"
             />
           )}
         </Card>
@@ -122,7 +130,7 @@ export default async function DashboardPage() {
         <Card>
           <div className="mb-4 flex items-center gap-2.5">
             <span className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary-50 ring-1 ring-inset ring-primary-100">
-              <FileCheck2 className="h-4.5 w-4.5 text-primary-700" aria-hidden />
+              <FileCheck2 className="h-5 w-5 text-primary-700" aria-hidden />
             </span>
             <h2 className="font-semibold text-text-primary">Documents</h2>
           </div>
@@ -156,7 +164,7 @@ export default async function DashboardPage() {
         <Card>
           <div className="mb-4 flex items-center gap-2.5">
             <span className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary-50 ring-1 ring-inset ring-primary-100">
-              <Send className="h-4.5 w-4.5 text-primary-700" aria-hidden />
+              <Send className="h-5 w-5 text-primary-700" aria-hidden />
             </span>
             <h2 className="font-semibold text-text-primary">Applications</h2>
           </div>
@@ -194,7 +202,7 @@ export default async function DashboardPage() {
         <Card tone={summary.deadlines.some((d) => d.daysLeft <= 14) ? "warning" : "default"}>
           <div className="mb-4 flex items-center gap-2.5">
             <span className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary-50 ring-1 ring-inset ring-primary-100">
-              <CalendarClock className="h-4.5 w-4.5 text-primary-700" aria-hidden />
+              <CalendarClock className="h-5 w-5 text-primary-700" aria-hidden />
             </span>
             <h2 className="font-semibold text-text-primary">Upcoming deadlines</h2>
           </div>
