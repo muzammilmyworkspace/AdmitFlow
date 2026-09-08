@@ -26,6 +26,9 @@ enum AccountStatus {
   ACTIVE
   SUSPENDED
   DEACTIVATED
+  // Deletion requested, grace period running. The student can still cancel; nothing
+  // irreversible has happened yet (docs/42-gdpr-and-data-privacy.md §3.2).
+  PENDING_DELETION
   DELETED
 }
 
@@ -60,6 +63,7 @@ model User {
   applicationStatusChanges ApplicationStatusHistory[] @relation("ApplicationStatusActor")
 
   bookingsAsStudent       Booking[]             @relation("BookingStudent")
+  dataSubjectRequests     DataSubjectRequest[] @relation("DataSubjectRequestUser")
   assessmentReviewsRequested AssessmentReview[] @relation("AssessmentReviewStudent")
   assessmentReviewsAssigned  AssessmentReview[] @relation("AssessmentReviewReviewer")
 
@@ -963,6 +967,45 @@ model AssessmentReview {
   @@unique([assessmentResultId])
   @@index([status, createdAt])
   @@index([studentId, status])
+}
+
+// A data-subject request — docs/42-gdpr-and-data-privacy.md §3.2, §3.3.
+//
+// Modelled as a row rather than as an immediate action for two reasons the doc gives:
+// the student is entitled to a confirmation of what actually happened to their data, and
+// compliance needs an auditable record that the request was received and handled inside
+// whatever response window applies.
+enum DataSubjectRequestType {
+  EXPORT
+  DELETION
+}
+
+enum DataSubjectRequestStatus {
+  PENDING
+  FULFILLED
+  CANCELLED
+}
+
+model DataSubjectRequest {
+  id          String                   @id @default(uuid())
+  userId      String
+  type        DataSubjectRequestType
+  status      DataSubjectRequestStatus @default(PENDING)
+  // When the irreversible steps of a DELETION may begin. Null for an EXPORT.
+  executeAfter DateTime?
+  requestedAt DateTime                 @default(now())
+  fulfilledAt DateTime?
+  cancelledAt DateTime?
+  // Plain-language record of what was hard-deleted, anonymised, and retained with a
+  // legal justification — so the answer survives the request being closed.
+  summary     Json?
+  createdAt   DateTime                 @default(now())
+  updatedAt   DateTime                 @updatedAt
+
+  user User @relation("DataSubjectRequestUser", fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, type, status])
+  @@index([status, executeAfter])
 }
 
 // ============================================================================

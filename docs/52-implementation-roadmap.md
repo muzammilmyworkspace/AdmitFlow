@@ -225,3 +225,35 @@ ever match, so the student pays and receives nothing, with a successful payment 
 (`GET`/`PATCH /api/v1/admin/assessment-reviews`), so a review is delivered today by an
 admin or consultant calling that endpoint directly. A queue screen is the obvious next
 piece of work.
+
+### Account self-service and the scheduler — D-22, D-23
+
+The gaps a full walk-through of the signed-in product turned up, in the order they were
+found:
+
+**Identity.** No `public/` directory, so no favicon and no share card; `Inter` named in the
+Tailwind token since Phase 2 but never actually loaded; no `error.tsx`, `not-found.tsx` or
+`loading.tsx` anywhere; onboarding — the first screen after sign-up — sitting outside the
+dashboard shell and therefore the plainest surface in the product.
+
+**Security.** No `Content-Security-Policy`, despite `next.config.ts` claiming a stricter one
+lived in middleware. The consultant-review endpoints were the only mutating routes without
+a rate limit.
+
+**Missing surfaces.** The notification API had been complete since Phase 16 and nothing in
+the interface ever called it. There was no settings page, so no way to change a password,
+review sessions, export data, or delete an account. The consultant review queue was
+API-only — the paid human review was delivered by someone running `curl`.
+
+**Operations.** Nothing ran on a timer at all.
+
+All are now built. What remains outstanding is the risk register's own list
+(`55-known-risks-and-open-questions.md`): the legal reviews (B-1, B-2), a malware-scanning
+vendor (B-3), exact brand-colour sampling (B-4), subprocessor DPAs (B-5), and the
+production infrastructure — real Redis, real S3, real payment credentials, and a scheduler
+actually calling `/api/v1/internal/cron` on a timer.
+
+**A note on running the suites back to back:** signup is rate-limited to 5/hour against an
+in-memory store, so a second full run inside the hour is refused. Both API suites now
+detect the 429 and abort with an explanation rather than reporting the cascade of
+`AUTH_REQUIRED` failures that follows. Restart the dev server to reset the bucket.

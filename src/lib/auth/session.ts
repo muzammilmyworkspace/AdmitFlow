@@ -43,6 +43,19 @@ export async function createSession(
   return rawToken;
 }
 
+/**
+ * The hash of the caller own session cookie, or null when unauthenticated.
+ *
+ * Lets a caller distinguish "this session" from the others in the session list, and
+ * spare it when a password change revokes the rest. Returns the hash, never the raw
+ * token, so nothing downstream can be tempted to reuse it as a credential.
+ */
+export async function currentSessionTokenHash(): Promise<string | null> {
+  const cookieStore = await cookies();
+  const raw = cookieStore.get(SESSION_COOKIE)?.value;
+  return raw ? hashToken(raw) : null;
+}
+
 export async function getSessionUser() {
   const cookieStore = await cookies();
   const raw = cookieStore.get(SESSION_COOKIE)?.value;

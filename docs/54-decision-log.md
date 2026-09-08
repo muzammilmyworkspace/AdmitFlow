@@ -342,3 +342,69 @@ spacing scale has no 4.5, so those were dead classes silently rendering at the i
 intrinsic size. And `EmptyState`'s description carried `mx-auto`, which kept centring the
 block however the caller aligned the container — so on the dashboard the text sat visibly
 indented under its own heading. Alignment is now a prop.
+
+---
+
+## D-22. Account self-service, and deletion as a tracked, reversible request
+
+**Context:** A student could sign up, onboard, pay, and apply — and could not change their
+password, see where they were signed in, take their data, or leave. `/api/v1/users/me` was
+GET-only and there was no settings page at all. `docs/42-gdpr-and-data-privacy.md` designed
+export and deletion in detail; neither had an endpoint.
+
+**Chosen:** A settings page over four new endpoints, plus a `DataSubjectRequest` model.
+
+**Password:** re-authentication is required before the credential changes — without it, an
+unlocked laptop is enough to lock the real owner out of their own account. Success revokes
+every *other* session, sparing the caller's own, so the student is not signed out of the
+page they just used.
+
+**Export:** assembled from explicit `select`s, never whole rows. A `select: *` here would
+start exporting password hashes and session token hashes the moment someone added a
+relation, and an export endpoint is exactly where that must not happen. Served as an
+attachment: rendered inline, the JSON sits in browser history. Returned synchronously
+rather than queued, which departs from docs/42 §3.3 — at v1 volumes one student's record
+is a handful of small queries, and the seam to move it to a job later is the route.
+
+**Deletion:** a tracked row with a disclosed grace period, not a cascade off a button. The
+account moves to `PENDING_DELETION` and nothing irreversible happens until the sweep runs,
+so the grace period is real rather than cosmetic. The two-tier outcome required by docs/42
+§3.2 — personal data deleted, financial and audit records retained with the personal
+linkage scrubbed — is rendered from the same constant the deletion itself uses, so what
+the student agreed to cannot drift from what happens.
+
+**Tradeoffs:** `PENDING_DELETION` is a new account status every status check now has to
+consider. Worth it: the alternative is a boolean flag that means the same thing while
+being invisible to anything reading `status`.
+
+## D-23. Periodic work runs as an authenticated batch, not a resident worker
+
+**Context:** `src/worker/index.ts` had been a placeholder since Phase 1, so nothing ran on
+a timer. A consultation hold only expired when a later request happened to touch the same
+slot, and `DEADLINE_APPROACHING` was an event name with no sender.
+
+**Chosen:** `runScheduledSweeps()` in `src/services/scheduled-jobs.ts`, reachable two ways:
+`POST /api/v1/internal/cron` for an external scheduler, and `npm run worker` for a manual
+or containerised run. Both call the same function; no sweep knows which drove it.
+
+**Why not a resident BullMQ worker:** the $0-infrastructure profile (D-11) has nowhere to
+run one. When that changes, the queue processors register in the worker entrypoint and
+call these same services — the route can then be deleted without a sweep changing.
+
+**The security shape of the cron endpoint, which deletes accounts:** it fails closed —
+with no `CRON_SECRET` configured it refuses every request rather than running
+unauthenticated. The comparison is constant-time, because a byte-by-byte `===` on a secret
+leaks its prefix to anyone willing to measure and this endpoint is callable by the whole
+internet. A wrong secret and an unconfigured deployment both return the same 404, so
+neither announces itself.
+
+**Idempotency:** deadline reminders check the `Notification` table for an existing reminder
+for the same application inside the same window, rather than setting a flag on the
+application. That keeps an hourly schedule from sending hourly reminders and survives a
+re-run after a partial failure. Each sweep is a backstop, never the only path to a correct
+state — the booking path still releases its own expired hold inline.
+
+**Failure isolation:** one sweep throwing must not stop the others; a broken deadline query
+should not also mean nobody's deletion is executed. Errors are collected and returned, and
+the endpoint answers 200 with them in the body — a 500 would make most schedulers retry the
+whole batch including the parts that succeeded.

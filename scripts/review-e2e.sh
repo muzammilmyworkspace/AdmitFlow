@@ -54,8 +54,18 @@ code_of() { echo "$1" | grep -o '"code":"[A-Z_]*"' | head -1 | cut -d'"' -f4; }
 
 register() { # register <email> <jar>
   local email=$1 jar=$2
-  curl -s -X POST "$BASE/api/v1/auth/signup" -H "Content-Type: application/json" \
-    -d "{\"email\":\"$email\",\"password\":\"$PASSWORD\",\"firstName\":\"E2E\",\"lastName\":\"User\"}" > /dev/null
+  # A 429 here cascades into twenty AUTH_REQUIRED failures further down, which reads as
+  # twenty broken features rather than as one exhausted bucket. Signup is 5/hour and the
+  # store is in-memory, so re-running this suite a few times reaches it.
+  local code
+  code=$(curl -s -o /dev/null -w "%{http_code}" -X POST "$BASE/api/v1/auth/signup" \
+    -H "Content-Type: application/json" \
+    -d "{\"email\":\"$email\",\"password\":\"$PASSWORD\",\"firstName\":\"E2E\",\"lastName\":\"User\"}")
+  if [[ "$code" == "429" ]]; then
+    printf "\n\033[31mSignup is rate limited (429).\033[0m Restart the dev server to reset the\n"
+    printf "in-memory bucket, then re-run. Aborting rather than reporting false failures.\n\n"
+    exit 2
+  fi
   sleep 1
   local token
   token=$(grep -o 'verify-email?token=[A-Za-z0-9_-]*' "$LOG" | tail -1 | cut -d= -f2)

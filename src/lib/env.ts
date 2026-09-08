@@ -12,6 +12,10 @@ const envSchema = z
     DATABASE_URL: z.string().min(1, "DATABASE_URL is required"),
 
     SESSION_SECRET: z.string().min(32, "SESSION_SECRET must be at least 32 characters"),
+    // Shared secret the external scheduler presents to /api/v1/internal/cron. Optional so
+    // a developer need not set one; the route refuses to run at all when it is unset,
+    // rather than running unauthenticated.
+    CRON_SECRET: z.string().min(32, "CRON_SECRET must be at least 32 characters").optional(),
     GOOGLE_CLIENT_ID: z.string().optional(),
     GOOGLE_CLIENT_SECRET: z.string().optional(),
     APPLE_CLIENT_ID: z.string().optional(),

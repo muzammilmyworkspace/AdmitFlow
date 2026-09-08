@@ -14,10 +14,12 @@ import {
   Send,
   Settings2,
   University,
+  UserCog,
   X,
 } from "lucide-react";
 import { Badge } from "@/components/ui/Badge";
 import { Logo } from "@/components/brand/Logo";
+import { NotificationBell } from "@/features/notifications/NotificationBell";
 import { apiPost } from "@/lib/api-client";
 import { cn } from "@/lib/cn";
 
@@ -112,6 +114,22 @@ export function DashboardNav({
             </Badge>
           )}
 
+          <NotificationBell />
+
+          <Link
+            href="/dashboard/settings"
+            aria-label="Account settings"
+            aria-current={pathname.startsWith("/dashboard/settings") ? "page" : undefined}
+            className={cn(
+              "flex items-center rounded-md p-2 transition-colors duration-fast",
+              pathname.startsWith("/dashboard/settings")
+                ? "bg-brand-gradient-soft text-primary-700 ring-1 ring-inset ring-secondary-200"
+                : "text-text-secondary hover:bg-primary-50/60 hover:text-text-primary",
+            )}
+          >
+            <UserCog className="h-5 w-5" aria-hidden />
+          </Link>
+
           {/* The avatar is the small piece of the shell that says "this is your account",
               which a bare Sign out link never did. */}
           <span
@@ -177,6 +195,16 @@ export function DashboardNav({
                 </li>
               );
             })}
+            <li>
+              <Link
+                href="/dashboard/settings"
+                onClick={() => setMenuOpen(false)}
+                className="flex items-center gap-2.5 rounded-md px-3 py-3 text-sm font-medium text-text-primary hover:bg-primary-50/60"
+              >
+                <UserCog className="h-4 w-4" aria-hidden />
+                Settings
+              </Link>
+            </li>
           </ul>
         </nav>
       )}

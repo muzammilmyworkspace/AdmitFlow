@@ -53,11 +53,22 @@ status_of() { # status_of <jar> <method> <path> [body]
   fi
 }
 json_field() { echo "$1" | grep -o "\"$2\":\"[^\"]*\"" | head -1 | cut -d'"' -f4; }
+code_of() { echo "$1" | grep -o '"code":"[A-Z_]*"' | head -1 | cut -d'"' -f4; }
 
 register() { # register <email> <jar>  -> verifies and leaves an authenticated session
   local email=$1 jar=$2
-  curl -s -X POST "$BASE/api/v1/auth/signup" -H "Content-Type: application/json" \
-    -d "{\"email\":\"$email\",\"password\":\"$PASSWORD\",\"firstName\":\"E2E\",\"lastName\":\"User\"}" > /dev/null
+  # A 429 here cascades into twenty AUTH_REQUIRED failures further down, which reads as
+  # twenty broken features rather than as one exhausted bucket. Signup is 5/hour and the
+  # store is in-memory, so re-running this suite a few times reaches it.
+  local code
+  code=$(curl -s -o /dev/null -w "%{http_code}" -X POST "$BASE/api/v1/auth/signup" \
+    -H "Content-Type: application/json" \
+    -d "{\"email\":\"$email\",\"password\":\"$PASSWORD\",\"firstName\":\"E2E\",\"lastName\":\"User\"}")
+  if [[ "$code" == "429" ]]; then
+    printf "\n\033[31mSignup is rate limited (429).\033[0m Restart the dev server to reset the\n"
+    printf "in-memory bucket, then re-run. Aborting rather than reporting false failures.\n\n"
+    exit 2
+  fi
   sleep 1
   local token
   token=$(grep -o 'verify-email?token=[A-Za-z0-9_-]*' "$LOG" | tail -1 | cut -d= -f2)
@@ -208,7 +219,10 @@ assert_contains "an executable renamed .pdf is rejected" "FILE_INVALID" "$FAKE_R
 DL=$(api "$jarA" GET "/api/v1/vault/documents/$DOC_ID")
 SIGNED=$(echo "$DL" | grep -o '"url":"[^"]*"' | cut -d'"' -f4 | sed 's/\\u0026/\&/g')
 assert_eq "owner can download via a signed URL" "200" "$(curl -s -o /dev/null -w '%{http_code}' "$SIGNED")"
-assert_eq "a tampered signature is refused" "403" "$(curl -s -o /dev/null -w '%{http_code}' "$(echo "$SIGNED" | sed 's/sig=./sig=0/')")"
+# Appending to the signature always changes it. Overwriting its first character with a
+# fixed digit did not: when the signature already began with that digit, the "tampered"
+# URL was the valid one and this assertion passed or failed on a coin flip.
+assert_eq "a tampered signature is refused" "403" "$(curl -s -o /dev/null -w '%{http_code}' "${SIGNED}ff")"
 
 # =============================================================================
 section "7. Object-level authorization (IDOR)"
@@ -320,6 +334,53 @@ bad_input "an expiry before the test date is refused" '{"step":"addLanguageTest"
 # a partial profile.
 VALID_AFTER=$(api "$jarA" PATCH /api/v1/onboarding '{"step":"personal","firstName":"E2E","lastName":"User","dateOfBirth":"2002-01-01"}')
 assert_contains "a valid save still succeeds after the rejections" '"success":true' "$VALID_AFTER"
+
+# =============================================================================
+section "14. Account self-service"
+SESSIONS=$(api "$jarA" GET /api/v1/users/me/sessions)
+assert_contains "a student can see their own sessions" '"isCurrent":true' "$SESSIONS"
+
+# Changing a password requires proving you know the current one, or an unlocked laptop
+# is enough to lock the real owner out of their own account.
+WRONG=$(api "$jarA" POST /api/v1/users/me/password '{"currentPassword":"not-the-password","newPassword":"BrandNewPassphrase99!"}')
+assert_eq "a password change with the wrong current password is refused" "AUTH_INVALID_CREDENTIALS" "$(code_of "$WRONG")"
+
+WEAK=$(api "$jarA" POST /api/v1/users/me/password "{\"currentPassword\":\"$PASSWORD\",\"newPassword\":\"short\"}")
+assert_eq "a weak new password is refused" "VALIDATION_ERROR" "$(code_of "$WEAK")"
+
+# The export is the one endpoint that must never widen: a secret leaking here is a
+# secret handed to whoever asked for their own data.
+EXPORT=$(curl -s -b "$jarA" "$BASE/api/v1/users/me/export")
+assert_contains "a student can export their own data" '"exportedAt"' "$EXPORT"
+assert_not_contains "  ...with no password hash in it" 'passwordHash' "$EXPORT"
+assert_not_contains "  ...and no session token hash" 'tokenHash' "$EXPORT"
+EXPORT_HEADERS=$(curl -s -D- -o /dev/null -b "$jarA" "$BASE/api/v1/users/me/export")
+assert_contains "  ...served as a download, not rendered in a tab" 'attachment' "$EXPORT_HEADERS"
+
+# Deletion is disclosed, reversible during the grace period, and tracked.
+DELETION=$(api "$jarA" GET /api/v1/users/me/deletion)
+assert_contains "the deletion disclosure names what is retained" 'legally required' "$DELETION"
+REQUESTED_DEL=$(api "$jarA" POST /api/v1/users/me/deletion)
+assert_contains "a deletion can be requested" '"executeAfter"' "$REQUESTED_DEL"
+DUP_DEL=$(api "$jarA" POST /api/v1/users/me/deletion)
+assert_eq "  ...and cannot be requested twice" "CONFLICT" "$(code_of "$DUP_DEL")"
+CANCELLED=$(api "$jarA" DELETE /api/v1/users/me/deletion)
+assert_contains "  ...and can be cancelled during the grace period" '"cancelled":true' "$CANCELLED"
+
+# =============================================================================
+section "15. The scheduler endpoint"
+# It deletes accounts. With no secret configured it must refuse everything rather than
+# run unauthenticated, and a wrong secret must be indistinguishable from no route at all.
+assert_eq "the cron endpoint refuses an unauthenticated call" "404" \
+  "$(curl -s -o /dev/null -w "%{http_code}" -X POST "$BASE/api/v1/internal/cron")"
+assert_eq "  ...and a wrong secret" "404" \
+  "$(curl -s -o /dev/null -w "%{http_code}" -X POST "$BASE/api/v1/internal/cron" -H "Authorization: Bearer wrong-secret-that-is-long-enough-to-compare")"
+
+# =============================================================================
+section "16. Notifications"
+NOTIFS=$(api "$jarA" GET /api/v1/notifications)
+assert_contains "the notification centre returns the caller's own list" '"notifications"' "$NOTIFS"
+assert_contains "  ...with an unread count" '"unreadCount"' "$NOTIFS"
 
 # =============================================================================
 printf "\n\033[1mResults\033[0m\n"

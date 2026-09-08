@@ -7,6 +7,7 @@ const ADMIN_LINKS = [
   { href: "/admin", label: "Overview" },
   { href: "/admin/users", label: "Users" },
   { href: "/admin/documents", label: "Document queue" },
+  { href: "/admin/assessment-reviews", label: "Assessment reviews" },
   { href: "/admin/applications", label: "Applications" },
   { href: "/admin/audit", label: "Audit log" },
 ];
@@ -21,7 +22,11 @@ export default async function AdminLayout({ children }: { children: React.ReactN
   const isStaff =
     actor.permissions.has(PERMISSIONS.AUDIT_LOG_READ) ||
     actor.permissions.has(PERMISSIONS.DOCUMENT_REVIEW) ||
-    actor.permissions.has(PERMISSIONS.UNIVERSITY_MANAGE);
+    actor.permissions.has(PERMISSIONS.UNIVERSITY_MANAGE) ||
+    // A consultant holds only this one, and it is their whole reason to be here: without
+    // it in the gate, the person who delivers the paid reviews is redirected away from
+    // the queue that holds them.
+    actor.permissions.has(PERMISSIONS.ASSESSMENT_REVIEW_DELIVER);
   if (!isStaff) redirect("/dashboard");
 
   return (
