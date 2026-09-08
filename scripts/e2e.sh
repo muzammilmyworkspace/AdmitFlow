@@ -58,8 +58,9 @@ code_of() { echo "$1" | grep -o '"code":"[A-Z_]*"' | head -1 | cut -d'"' -f4; }
 register() { # register <email> <jar>  -> verifies and leaves an authenticated session
   local email=$1 jar=$2
   # A 429 here cascades into twenty AUTH_REQUIRED failures further down, which reads as
-  # twenty broken features rather than as one exhausted bucket. Signup is 5/hour and the
-  # store is in-memory, so re-running this suite a few times reaches it.
+  # twenty broken features rather than as one exhausted bucket. The signup bucket is
+  # relaxed outside production (src/lib/rate-limit.ts) and the store is in-memory, so this
+  # should not fire -- but when it does, say so instead of burying it.
   local code
   code=$(curl -s -o /dev/null -w "%{http_code}" -X POST "$BASE/api/v1/auth/signup" \
     -H "Content-Type: application/json" \

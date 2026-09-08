@@ -98,11 +98,34 @@ function getStore(): RateLimitStore {
  * — see callers. Keys are namespaced by policy name so different endpoint classes never
  * share a bucket.
  */
+/**
+ * SIGNUP alone is relaxed outside production.
+ *
+ * That policy is scoped by IP, and it exists to stop one origin creating accounts in
+ * bulk. In development and in the automated suites every request really does come from
+ * 127.0.0.1, so it ends up measuring a concentration that is an artefact of the
+ * environment rather than a signal about it: a full browser run needs six accounts and
+ * the production policy allows five an hour, so the suite could not pass however correct
+ * the product was.
+ *
+ * Deliberately only this one. LOGIN is left alone because scripts/e2e.sh §10 trips it on
+ * purpose to prove it works — relaxing that would leave the assertion passing while
+ * testing nothing. Production is untouched in either case: APP_ENV is validated as one of
+ * three values, so this cannot be switched on by a stray environment variable.
+ */
+function limitFor(
+  policyName: keyof typeof RATE_LIMITS,
+  policy: RateLimitPolicy,
+): RateLimitPolicy {
+  if (policyName !== "SIGNUP" || process.env.APP_ENV === "production") return policy;
+  return { ...policy, limit: policy.limit * 20 };
+}
+
 export async function enforceRateLimit(
   policyName: keyof typeof RATE_LIMITS,
   key: string,
 ): Promise<void> {
-  const policy = RATE_LIMITS[policyName];
+  const policy = limitFor(policyName, RATE_LIMITS[policyName]);
   const result = await getStore().hit(`${policyName}:${key}`, policy);
   if (!result.allowed) {
     const retryAfterSeconds = Math.max(1, Math.ceil((result.resetAt.getTime() - Date.now()) / 1000));
