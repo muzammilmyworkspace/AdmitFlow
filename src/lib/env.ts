@@ -10,6 +10,9 @@ const envSchema = z
     NEXT_PUBLIC_APP_URL: z.string().url(),
 
     DATABASE_URL: z.string().min(1, "DATABASE_URL is required"),
+    // The unpooled connection, used only by `prisma migrate deploy`. Optional because a
+    // local Postgres has no pooler and DATABASE_URL is already direct.
+    DIRECT_URL: z.string().optional(),
 
     SESSION_SECRET: z.string().min(32, "SESSION_SECRET must be at least 32 characters"),
     // Shared secret the external scheduler presents to /api/v1/internal/cron. Optional so

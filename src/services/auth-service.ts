@@ -1,7 +1,7 @@
 import { db } from "@/lib/db";
 import { AppError } from "@/lib/errors";
 import { writeAuditLog } from "@/lib/audit";
-import { sendAuthEmail } from "@/lib/notifications/dev-mailer";
+import { sendAuthEmail } from "@/lib/notifications/mailer";
 import { getEnv } from "@/lib/env";
 import { hashPassword, verifyPassword } from "@/lib/auth/password";
 import { checkPasswordPolicy } from "@/lib/auth/password-policy";

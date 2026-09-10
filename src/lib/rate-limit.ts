@@ -1,3 +1,4 @@
+import IORedis, { type Redis } from "ioredis";
 import { AppError } from "@/lib/errors";
 import { logger } from "@/lib/logger";
 
@@ -74,20 +75,105 @@ class MemoryRateLimitStore implements RateLimitStore {
   }
 }
 
+/**
+ * Redis-backed sliding window, as a sorted set per key.
+ *
+ * The same shape as the in-memory store: each hit is a member scored by its timestamp,
+ * everything older than the window is dropped, and the count that remains decides. All
+ * four commands go in one pipeline so the read and the write cannot interleave with
+ * another instance's.
+ *
+ * This is what makes rate limiting real on a serverless platform. Every invocation there
+ * is a fresh process, so an in-memory counter is empty on arrival — the limit would be
+ * enforced against a bucket that never has anything in it, which is to say not enforced
+ * at all.
+ */
+class RedisRateLimitStore implements RateLimitStore {
+  constructor(private readonly redis: Redis) {}
+
+  async hit(key: string, policy: RateLimitPolicy): Promise<RateLimitResult> {
+    const now = Date.now();
+    const cutoff = now - policy.windowMs;
+    // Unique per hit: two requests in the same millisecond would otherwise collapse into
+    // one sorted-set member and the second would be free.
+    const member = `${now}-${Math.random().toString(36).slice(2, 10)}`;
+
+    const results = await this.redis
+      .pipeline()
+      .zremrangebyscore(key, 0, cutoff)
+      .zadd(key, now, member)
+      .zcard(key)
+      .zrange(key, 0, 0, "WITHSCORES")
+      // Let the key expire on its own once the window has passed, so an abandoned bucket
+      // is not stored forever.
+      .pexpire(key, policy.windowMs)
+      .exec();
+
+    const count = Number(results?.[2]?.[1] ?? 0);
+    const oldestScore = Number((results?.[3]?.[1] as string[] | undefined)?.[1] ?? now);
+
+    return {
+      allowed: count <= policy.limit,
+      remaining: Math.max(0, policy.limit - count),
+      resetAt: new Date(oldestScore + policy.windowMs),
+    };
+  }
+
+  async reset(key: string): Promise<void> {
+    await this.redis.del(key);
+  }
+}
+
 let store: RateLimitStore | null = null;
 
 function getStore(): RateLimitStore {
-  if (!store) {
-    // A Redis-backed store is the documented production driver; it is selected here when
-    // a Redis connection is configured and available. Until Redis is provisioned (see
-    // docs/55-known-risks-and-open-questions.md), the in-memory store is used and this
-    // fact is logged once so it can never be a silent production misconfiguration.
-    store = new MemoryRateLimitStore();
-    logger.warn("Rate limiting is using the in-memory store (single-process only)", {
-      service: "rate-limit",
-      operation: "getStore",
-    });
+  if (store) return store;
+
+  const url = process.env.REDIS_URL;
+  // A URL pointing at a local Redis nobody is running is worse than none: every request
+  // would pay a connection timeout. Only the real thing counts.
+  const usable = url && !/localhost|127.0.0.1/.test(url);
+
+  if (usable) {
+    try {
+      const redis = new IORedis(url, {
+        // Serverless: fail fast rather than holding a request open behind a retry loop.
+        maxRetriesPerRequest: 2,
+        connectTimeout: 5_000,
+        enableOfflineQueue: false,
+        lazyConnect: false,
+      });
+      redis.on("error", (error: Error) => {
+        logger.error("Redis rate-limit store error", {
+          service: "rate-limit",
+          operation: "redis",
+          message: error.message,
+        });
+      });
+      store = new RedisRateLimitStore(redis);
+      logger.info("Rate limiting is using the Redis store", {
+        service: "rate-limit",
+        operation: "getStore",
+      });
+      return store;
+    } catch (error) {
+      logger.error("Redis rate-limit store failed to initialise; falling back to memory", {
+        service: "rate-limit",
+        operation: "getStore",
+        message: error instanceof Error ? error.message : String(error),
+      });
+    }
   }
+
+  store = new MemoryRateLimitStore();
+  // In production this is a genuine misconfiguration, not a note: on a serverless
+  // platform an in-memory bucket is empty on every invocation, so the limit is not being
+  // enforced. Logged at error level so it surfaces rather than scrolling past.
+  const level = process.env.APP_ENV === "production" ? "error" : "warn";
+  logger[level]("Rate limiting is using the in-memory store (single-process only)", {
+    service: "rate-limit",
+    operation: "getStore",
+  });
   return store;
 }
 

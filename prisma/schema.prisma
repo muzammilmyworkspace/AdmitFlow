@@ -11,7 +11,15 @@ generator client {
 
 datasource db {
   provider = "postgresql"
+  // Runtime queries go through the connection pooler. On a serverless platform every
+  // invocation is its own process, so unpooled connections exhaust Postgres' limit long
+  // before traffic does.
   url      = env("DATABASE_URL")
+  // Migrations go direct. Supabase's pooler runs pgbouncer in transaction mode, which has
+  // no session state — and prepared statements, advisory locks and the migration engine
+  // all need it. Falls back to DATABASE_URL when unset, so local development (a plain
+  // Postgres with no pooler) needs no second variable.
+  directUrl = env("DIRECT_URL")
 }
 
 // ============================================================================

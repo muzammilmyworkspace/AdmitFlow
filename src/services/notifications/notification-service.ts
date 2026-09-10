@@ -2,7 +2,7 @@ import "server-only";
 import { db } from "@/lib/db";
 import { AppError } from "@/lib/errors";
 import { logger } from "@/lib/logger";
-import { sendEmail } from "@/lib/notifications/dev-mailer";
+import { sendEmail } from "@/lib/notifications/mailer";
 import type { NotificationChannel, Prisma } from "../../../prisma/generated/client";
 
 // Notification service — docs/23-notification-system.md.

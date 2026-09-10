@@ -4,7 +4,7 @@ import { AppError } from "@/lib/errors";
 import { writeAuditLog } from "@/lib/audit";
 import { hashPassword, verifyPassword } from "@/lib/auth/password";
 import { checkPasswordPolicy } from "@/lib/auth/password-policy";
-import { sendAuthEmail } from "@/lib/notifications/dev-mailer";
+import { sendAuthEmail } from "@/lib/notifications/mailer";
 import type { Prisma } from "../../prisma/generated/client";
 
 // Account self-service — the things a student must be able to do to their own account
