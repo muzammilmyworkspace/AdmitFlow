@@ -10,8 +10,20 @@ import { FormField } from "@/components/ui/FormField";
 import { Card } from "@/components/ui/Card";
 import { Alert } from "@/components/ui/Alert";
 import { apiPost, ApiError } from "@/lib/api-client";
+import { QuickLogin } from "./QuickLogin";
 
-export function LoginForm() {
+interface LoginFormProps {
+  /**
+   * Renders the bare form without the Card shell and page heading, for surfaces that
+   * supply their own frame — the marketing hero embeds it inside a glass panel so a
+   * returning student can sign in without leaving the landing page.
+   */
+  embedded?: boolean;
+  /** Show the one-click test sign-in. Decided server-side from APP_ENV; never true in production. */
+  quickLogin?: boolean;
+}
+
+export function LoginForm({ embedded = false, quickLogin = false }: LoginFormProps) {
   const router = useRouter();
   const [values, setValues] = useState({ email: "", password: "" });
   const [error, setError] = useState<{ message: string; unverified: boolean } | null>(null);
@@ -41,12 +53,16 @@ export function LoginForm() {
     }
   }
 
-  return (
-    <Card className="shadow-lg">
-      <h1 className="text-2xl font-semibold tracking-tight text-text-primary">Welcome back</h1>
-      <p className="mb-7 mt-1.5 text-sm text-text-secondary">
-        Pick up where you left off.
-      </p>
+  const body = (
+    <>
+      {!embedded && (
+        <>
+          <h1 className="text-2xl font-semibold tracking-tight text-text-primary">Welcome back</h1>
+          <p className="mb-7 mt-1.5 text-sm text-text-secondary">Pick up where you left off.</p>
+        </>
+      )}
+
+      {quickLogin && <QuickLogin className="mb-6" compact={embedded} />}
 
       {error && (
         <Alert tone="error" className="mb-5">
@@ -104,6 +120,9 @@ export function LoginForm() {
           </Link>
         </span>
       </div>
-    </Card>
+    </>
   );
+
+  if (embedded) return body;
+  return <Card className="shadow-lg">{body}</Card>;
 }

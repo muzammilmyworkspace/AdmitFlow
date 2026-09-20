@@ -12,9 +12,15 @@ export interface InputProps extends InputHTMLAttributes<HTMLInputElement> {
 // aria-invalid wired by the caller, always paired with a <FormField> label.
 export const Input = forwardRef<HTMLInputElement, InputProps>(
   ({ className, invalid, icon, ...props }, ref) => {
+    // Email-helper extensions (Temp Mail, password managers) decorate inputs with their
+    // own attributes and an icon before React hydrates, and React reports each as a
+    // hydration mismatch even though nothing in the app produced it. The flag covers
+    // only this element's attributes, so a real mismatch elsewhere is still reported —
+    // the same narrow treatment the root layout gives <html> and <body>.
     const field = (
       <input
         ref={ref}
+        suppressHydrationWarning
         aria-invalid={invalid || undefined}
         className={cn(
           "h-11 w-full rounded-md border bg-surface px-3.5 text-sm text-text-primary",

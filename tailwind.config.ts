@@ -90,11 +90,63 @@ const config: Config = {
           from: { opacity: "0" },
           to: { opacity: "1" },
         },
+        // --- Marketing-site motion. These are ambient and looping, which is why they
+        // live apart from the two product transitions above: the signed-in app never
+        // uses them (docs/07 §"Motion"), the public site does.
+        float: {
+          "0%, 100%": { transform: "translateY(0)" },
+          "50%": { transform: "translateY(-14px)" },
+        },
+        "float-x": {
+          "0%, 100%": { transform: "translate(0, 0) rotate(-1deg)" },
+          "50%": { transform: "translate(6px, -10px) rotate(1deg)" },
+        },
+        aurora: {
+          "0%, 100%": { transform: "translate(0, 0) scale(1)" },
+          "33%": { transform: "translate(6%, -4%) scale(1.08)" },
+          "66%": { transform: "translate(-4%, 6%) scale(0.96)" },
+        },
+        marquee: {
+          from: { transform: "translateX(0)" },
+          to: { transform: "translateX(-50%)" },
+        },
+        "spin-slow": {
+          from: { transform: "rotate(0deg)" },
+          to: { transform: "rotate(360deg)" },
+        },
+        "pulse-ring": {
+          "0%": { transform: "scale(0.9)", opacity: "0.7" },
+          "100%": { transform: "scale(1.9)", opacity: "0" },
+        },
+        shimmer: {
+          from: { backgroundPosition: "200% 0" },
+          to: { backgroundPosition: "-200% 0" },
+        },
+        "gradient-x": {
+          "0%, 100%": { backgroundPosition: "0% 50%" },
+          "50%": { backgroundPosition: "100% 50%" },
+        },
+        "scroll-cue": {
+          "0%": { transform: "translateY(0)", opacity: "0" },
+          "30%": { opacity: "1" },
+          "100%": { transform: "translateY(10px)", opacity: "0" },
+        },
       },
       animation: {
         // Short and purposeful — docs/07 §"Motion" caps ordinary transitions at ~300ms.
         "fade-up": "fade-up 320ms ease-out both",
         "fade-in": "fade-in 240ms ease-out both",
+        float: "float 6s ease-in-out infinite",
+        "float-slow": "float 9s ease-in-out infinite",
+        "float-x": "float-x 8s ease-in-out infinite",
+        aurora: "aurora 18s ease-in-out infinite",
+        "aurora-slow": "aurora 26s ease-in-out infinite reverse",
+        marquee: "marquee 38s linear infinite",
+        "spin-slow": "spin-slow 60s linear infinite",
+        "pulse-ring": "pulse-ring 2.4s cubic-bezier(0.2, 0.6, 0.2, 1) infinite",
+        shimmer: "shimmer 3.2s linear infinite",
+        "gradient-x": "gradient-x 8s ease infinite",
+        "scroll-cue": "scroll-cue 1.8s ease-in-out infinite",
       },
     },
   },
