@@ -1,0 +1,485 @@
+{
+  "$comment": "Lithuania catalog research — compiled 2026-09-20 from official university pages (see docs/56-lithuania-catalog-research.md for sources and open items). Every entry carries `confidence` and `sourceUrl` so it can be loaded into UniversityMetadata and shown with a freshness label. Fields marked null were not published on the source page and must be confirmed before a student sees them. All fees are EUR, per academic year, for non-EU students, 2026/2027 unless stated.",
+  "researchedAt": "2026-09-20",
+  "country": {
+    "isoCode2": "LT",
+    "name": "Lithuania",
+    "region": "Europe",
+    "status": "LIVE",
+    "cities": [
+      { "name": "Vilnius", "timezone": "Europe/Vilnius" },
+      { "name": "Kaunas", "timezone": "Europe/Vilnius" },
+      { "name": "Klaipėda", "timezone": "Europe/Vilnius" }
+    ]
+  },
+  "crossCutting": {
+    "academicYearStart": "2026-09-01",
+    "qualificationRecognition": {
+      "body": "SKVC (Studijų kokybės vertinimo centras)",
+      "note": "Foreign qualifications must be recognised. KTU and VMU run the recognition inside their own admission (VMU: within 20 working days); VU and VILNIUS TECH ask for SKVC recognition or assess under SKVC guidelines. Budget 3–4 weeks for it.",
+      "sourceUrl": "https://lamabpo.lt/en/admissions-to-higher-education-institutions-key-information-for-international-applicants/"
+    },
+    "documentLegalisation": {
+      "hagueCountries": "Apostille on certificates and transcripts.",
+      "nonHagueCountries": "Double legalisation: Ministry of Foreign Affairs of the issuing country, then Lithuanian MFA (universities sometimes handle the second stamp). Pakistan is non-Hague.",
+      "pakistan": "Vilnius University additionally requires HEC + Ministry of Foreign Affairs attestation on Pakistani certificates.",
+      "translation": "Everything not in English or Lithuanian needs an official translation; certified copies of originals."
+    },
+    "commonDocuments": [
+      { "documentType": "PASSPORT", "note": "Valid ≥ 1 year (VILNIUS TECH) or ≥ 2 years (VMU) from application; issued within last 10 years for TRP." },
+      { "documentType": "SECONDARY_CERTIFICATE", "note": "Legalised + translated; with full transcripts (Biology & Chemistry shown for LSMU)." },
+      { "documentType": "BACHELOR_DEGREE", "note": "Masters only — diploma + supplement/transcripts, legalised." },
+      { "documentType": "ENGLISH_TEST", "note": "IELTS/TOEFL/PTE/Duolingo/Cambridge; usually not older than 2 years (LCC)." },
+      { "documentType": "MOTIVATION_LETTER", "note": "VU 1200–4000 characters; VMU 1200–3000 characters." },
+      { "documentType": "CV", "note": "Masters (VMU, ISM)." },
+      { "documentType": "PHOTO", "note": "3×4 cm." },
+      { "documentType": "APPLICATION_FEE_RECEIPT", "note": "€100–€180 non-refundable, per university." },
+      { "documentType": "POLICE_CLEARANCE", "note": "For the residence permit — every country lived in > 6 months in the last 2 years; valid 6 months; legalised." },
+      { "documentType": "BANK_STATEMENT", "note": "For the residence permit — see migration.financialProof." },
+      { "documentType": "HEALTH_INSURANCE", "note": "For the residence permit — ≥ €10,000 cover, whole Schengen area, no franchise." }
+    ],
+    "migration": {
+      "route": "Degree students need a Temporary Residence Permit (TRP). Applied for in MIGRIS (migracija.lt) with biometrics at a VFS Global centre abroad, or — where there is no centre — after arrival at a Migration Department office. Study in Lithuania's official guidance says both national visa D and TRP should be applied for BEFORE travel; universities issue a 'mediation letter' that must be used within 7–14 days.",
+      "vfsCountriesWithLithuaniaTrp": ["Armenia", "Australia", "Azerbaijan", "Bosnia and Herzegovina", "Brazil", "Canada", "Georgia", "Ghana", "India", "Israel", "Japan", "Kazakhstan", "Kyrgyzstan", "Malaysia", "Moldova", "Mongolia", "New Zealand", "Philippines", "Singapore", "South Africa", "South Korea", "Taiwan", "Thailand", "Turkey", "Ukraine", "United Kingdom", "United States", "Uzbekistan", "Vietnam", "Zimbabwe"],
+      "pakistanNote": "OPEN RISK — Lithuania has no embassy in Pakistan and no VFS centre accepting Lithuanian TRP applications there. Short-stay C visas for Lithuania are handled by the Embassy of Hungary in Islamabad (+92 51 207 7800). The exact D-visa/TRP route for a Pakistani student must be confirmed with the Migration Department and the admitting university before SNZ promises anything. Several universities (LSMU) explicitly note Pakistan is not on the VFS list.",
+      "financialProof": "2026: €577 per month × 12 + €1,153 return costs (Vilnius University figure); VMU 2025 guide: €520/month = €6,228/year, doubled (€12,456) plus notarised commitment if a parent's account is used. VILNIUS TECH states €7,500/year in a Lithuanian bank.",
+      "stateFee": "€80 (decision within 2 months) or €320 expedited (1 month); VFS service charge €40–€160; applicants must apply within the mediation letter validity.",
+      "healthInsurance": "≥ €10,000, Schengen-wide, no franchise; ≥ 1 year.",
+      "sourceUrls": [
+        "https://www.vu.lt/en/admissions/visa-and-residence-permit",
+        "https://studyin.lt/how-to-apply/visas-and-permits/",
+        "https://www.vdu.lt/wp-content/uploads/2025/02/TRP_Application_Non_EU_citizens_2025-02.pdf",
+        "https://immigration.lt/lithuania/visa-application-centers/",
+        "https://keliauk.urm.lt/en/incoming/pakistan"
+      ]
+    },
+    "livingCosts": {
+      "note": "Secondary sources put living costs at roughly €500–€800 per month; LCC residence halls from €575 per semester. Not to be shown as a fact without a dated source.",
+      "confidence": "LOW"
+    }
+  },
+  "universities": [
+    {
+      "name": "Vilnius University",
+      "shortName": "VU",
+      "type": "UNIVERSITY",
+      "ownership": "PUBLIC",
+      "city": "Vilnius",
+      "websiteUrl": "https://www.vu.lt/en",
+      "applyUrl": "https://apply.vu.lt/",
+      "applicationFeeEur": 100,
+      "registrationFeeEur": null,
+      "deadlines": {
+        "bachelorNonEu": null,
+        "masterNonEu": null,
+        "note": "Not published on the pages fetched. Final graduation documents due before 20 Aug; scholarship applicants by 1 Jul. Decision within 30 working days of a complete file; accept within 7 working days; pay first year within 15 calendar days."
+      },
+      "english": {
+        "bachelor": { "cefr": "B2", "ielts": 5.5, "toeflIbt": null, "note": "Secondary sources give IELTS 5.5–6.0 for bachelor; VU keeps an approved list of methods — confirm per programme on vu.lt language-skills page." },
+        "master": { "cefr": "C1", "ielts": 6.5, "toeflIbt": null, "note": "Secondary sources give IELTS 6.5–7.0 for master." },
+        "confidence": "MEDIUM"
+      },
+      "academic": {
+        "general": "Completed secondary education (bachelor) / bachelor's degree (master); certified copies + official translations.",
+        "pakistan": "Bachelor: only applicants with 75% or higher total marks qualify; HSSC + SSC with marks statements; HEC and MOFA attestation. Master: CGPA 3.00 or 75%; some programmes require the OMPT exam (55% minimum). Pakistani applicants cannot apply with predicted grades.",
+        "india": "Final grade above 50%; apostille.",
+        "bangladesh": "Bachelor GPA 4.50+; master CGPA 3.00+.",
+        "nepal": "GPA 3.2+; NEB attestation + MoFA legalisation.",
+        "egypt": "Secondary certificate 65%+; master grade 'Good' or better."
+      },
+      "tuition": {
+        "bachelorRangeEur": [3200, 6500],
+        "masterRangeEur": [4000, 7200],
+        "note": "Ranges from secondary sources (study.eu / shiksha). Per-programme fees must be read from each programme page on vu.lt before display.",
+        "confidence": "LOW"
+      },
+      "programmes": [
+        { "name": "Bioinformatics", "level": "BACHELOR", "fieldOfStudy": "Computer Science", "durationMonths": 48, "campus": "Vilnius", "tuitionEur": null },
+        { "name": "Business Data Analytics", "level": "BACHELOR", "fieldOfStudy": "Data Science", "durationMonths": 48, "campus": "Vilnius", "tuitionEur": null },
+        { "name": "Chemistry of Nanomaterials", "level": "BACHELOR", "fieldOfStudy": "Chemistry", "durationMonths": 48, "campus": "Vilnius", "tuitionEur": null },
+        { "name": "Innovative Communication and Entrepreneurship", "level": "BACHELOR", "fieldOfStudy": "Communication", "durationMonths": 48, "campus": "Vilnius", "tuitionEur": null },
+        { "name": "Light Engineering", "level": "BACHELOR", "fieldOfStudy": "Physics / Engineering", "durationMonths": 48, "campus": "Vilnius", "tuitionEur": null },
+        { "name": "Multilingualism and Digital Technologies", "level": "BACHELOR", "fieldOfStudy": "Linguistics", "durationMonths": 48, "campus": "Vilnius", "tuitionEur": null },
+        { "name": "Language and Artificial Intelligence Management", "level": "BACHELOR", "fieldOfStudy": "Linguistics / AI", "durationMonths": 48, "campus": "Kaunas", "tuitionEur": null }
+      ],
+      "sourceUrls": [
+        "https://www.vu.lt/en/studies/bachelor-and-integrated-studies",
+        "https://www.vu.lt/en/studies/bachelor-studies",
+        "https://www.vu.lt/en/required-attachments",
+        "https://www.vu.lt/en/studies/bachelor-and-integrated-studies/requirements-for-the-documents"
+      ],
+      "confidence": "MEDIUM"
+    },
+    {
+      "name": "Vilnius Gediminas Technical University (VILNIUS TECH)",
+      "shortName": "VILNIUS TECH",
+      "type": "UNIVERSITY",
+      "ownership": "PUBLIC",
+      "city": "Vilnius",
+      "websiteUrl": "https://vilniustech.lt/en",
+      "applyUrl": "https://vilniustech.lt/en/international-students/full-time-students/",
+      "applicationFeeEur": 100,
+      "registrationFeeEur": 200,
+      "deadlines": {
+        "bachelorNonEu": "2026-04-20",
+        "masterNonEu": "2026-04-20",
+        "note": "Applications open 5 Jan 2026, close 20 Apr 2026 (search-result snippet from vilniustech.lt; confirm on the application-procedure page). Tuition payment deadlines: 15 Sep (autumn), 15 Feb (spring). Tuition + registration may be refunded if visa/TRP is refused."
+      },
+      "english": {
+        "bachelor": { "cefr": "B2", "ielts": 5.5, "ieltsSections": 5.5, "toeflIbt": 70, "pte": 48, "duolingo": 95, "toeic": 785, "cambridge": "FCE 160 / CAE grade C" },
+        "master": { "cefr": "B2", "ielts": 5.5, "toeflIbt": 72, "note": "Master minimums not separately confirmed; general page cites B2 / IELTS 5.5 / TOEFL iBT 72." },
+        "confidence": "HIGH"
+      },
+      "academic": {
+        "general": "High-school certificate with CGPA ≥ 60%. Entrance score = weighted Mathematics + Physics/science/social subject + English. Study gap must not exceed 3 years. Architecture requires an entrance exam.",
+        "pakistan": "Pakistan, Bangladesh and Nepal applicants must pass the OMPT Mathematics exam with ≥ 60% for university programmes.",
+        "financialNote": "University states students must hold ≥ €7,500/year in a Lithuanian bank account for living expenses."
+      },
+      "tuition": {
+        "bachelorGroups": [
+          { "group": "Business Management, Economics Engineering, Finance Engineering, Creative Industries, Entertainment Producing, Logistics & Transport Management", "eur": 3950 },
+          { "group": "Engineering / IT / Technologies", "eur": 4950 },
+          { "group": "Professional Bachelor: Port and Shipping Engineering Management", "eur": 3600 },
+          { "group": "Other Professional Bachelor programmes", "eur": 4380 },
+          { "group": "Architecture (years 1–4)", "eur": 6250 },
+          { "group": "Multimedia Design / Interactive Digital Media dual degree (Goldsmiths)", "eur": 9000 }
+        ],
+        "masterGroups": [
+          { "group": "Business Management, Economics Engineering, Finance Engineering, Transport Logistics, Business Leadership, Sustainability Management", "eur": 5450 },
+          { "group": "Other Engineering / IT / Technologies", "eur": 6450 },
+          { "group": "Architecture (5th year)", "eur": 7950 }
+        ],
+        "phdEur": 12449,
+        "confidence": "HIGH"
+      },
+      "programmes": [
+        { "name": "Business Management", "level": "BACHELOR", "fieldOfStudy": "Business", "durationMonths": 48, "campus": "Vilnius", "tuitionEur": 3950 },
+        { "name": "Economics Engineering", "level": "BACHELOR", "fieldOfStudy": "Economics", "durationMonths": 48, "campus": "Vilnius", "tuitionEur": 3950 },
+        { "name": "Finance Engineering", "level": "BACHELOR", "fieldOfStudy": "Finance", "durationMonths": 48, "campus": "Vilnius", "tuitionEur": 3950 },
+        { "name": "Creative Industries", "level": "BACHELOR", "fieldOfStudy": "Creative Industries", "durationMonths": 48, "campus": "Vilnius", "tuitionEur": 3950 },
+        { "name": "Logistics and Transport Management", "level": "BACHELOR", "fieldOfStudy": "Logistics", "durationMonths": 48, "campus": "Vilnius", "tuitionEur": 3950 },
+        { "name": "Engineering / IT / Technologies (various)", "level": "BACHELOR", "fieldOfStudy": "Engineering & IT", "durationMonths": 48, "campus": "Vilnius", "tuitionEur": 4950, "note": "Programme names to be enumerated from the bachelor programme list." },
+        { "name": "Architecture (integrated)", "level": "BACHELOR", "fieldOfStudy": "Architecture", "durationMonths": 60, "campus": "Vilnius", "tuitionEur": 6250, "note": "Entrance exam." },
+        { "name": "Business Management", "level": "MASTER", "fieldOfStudy": "Business", "durationMonths": 24, "campus": "Vilnius", "tuitionEur": 5450 },
+        { "name": "Transport Logistics", "level": "MASTER", "fieldOfStudy": "Logistics", "durationMonths": 24, "campus": "Vilnius", "tuitionEur": 5450 },
+        { "name": "Business Leadership", "level": "MASTER", "fieldOfStudy": "Business", "durationMonths": 24, "campus": "Vilnius", "tuitionEur": 5450 },
+        { "name": "Sustainability Management", "level": "MASTER", "fieldOfStudy": "Management", "durationMonths": 24, "campus": "Vilnius", "tuitionEur": 5450 },
+        { "name": "Engineering / IT / Technologies (various)", "level": "MASTER", "fieldOfStudy": "Engineering & IT", "durationMonths": 24, "campus": "Vilnius", "tuitionEur": 6450 }
+      ],
+      "sourceUrls": [
+        "https://vilniustech.lt/en/international-students/full-time-students/tuition-and-other-fees/",
+        "https://vilniustech.lt/for-international-students/admission-20262027-------scholarships/admission-requirements-for-international-students/51029",
+        "https://vilniustech.lt/for-international-students/admission-20262027-------scholarships/50773"
+      ],
+      "confidence": "HIGH"
+    },
+    {
+      "name": "Kaunas University of Technology (KTU)",
+      "shortName": "KTU",
+      "type": "UNIVERSITY",
+      "ownership": "PUBLIC",
+      "city": "Kaunas",
+      "websiteUrl": "https://en.ktu.edu/",
+      "applyUrl": "https://apply.ktu.edu/",
+      "applicationFeeEur": 100,
+      "registrationFeeEur": null,
+      "deadlines": {
+        "bachelorNonEu": "2026-06-01",
+        "masterNonEu": "2026-06-01",
+        "note": "Applications 15 Oct 2025 – 1 Jun 2026; studies start 1 Sep 2026. Applications processed 2–3 working days after fee confirmation."
+      },
+      "english": {
+        "bachelor": { "cefr": "B2", "ielts": 5.5, "ieltsSections": 5.5, "toeflIbt": 75, "cambridge": "B2 First / IESOL B2" },
+        "master": { "cefr": "C1", "ielts": 6.0, "ieltsSections": 5.5, "toeflIbt": 85 },
+        "confidence": "HIGH"
+      },
+      "academic": {
+        "general": "Bachelor: secondary education with ≥ 60% in each entry subject and one state/equivalent exam or KTU entrance exam. Master: bachelor's degree with weighted GPA ≥ 60%; motivation letter or interview.",
+        "recognition": "KTU evaluates foreign qualifications under SKVC / Lisbon Recognition Convention guidelines.",
+        "scholarships": "Partial (sometimes full) tuition waivers for strong applicants — every application is considered automatically."
+      },
+      "tuition": {
+        "bachelorGroups": [
+          { "group": "Business, Economics, Communications, Linguistics", "eur": 3250 },
+          { "group": "Engineering, Technology, Informatics, Mathematics", "eur": 4201 },
+          { "group": "Architecture (integrated, first part)", "eur": 5676 }
+        ],
+        "masterGroups": [
+          { "group": "Business, Economics, Communication, Philosophy", "eur": 4690 },
+          { "group": "Engineering, Technology, Informatics, Sciences", "eur": 5641 },
+          { "group": "Architecture", "eur": 7116 }
+        ],
+        "note": "Master fees shown on the page are labelled 2025–2026; confirm the 2026–2027 table.",
+        "confidence": "HIGH"
+      },
+      "programmes": [
+        { "name": "Business / Economics / Communication programmes (various)", "level": "BACHELOR", "fieldOfStudy": "Business & Social Sciences", "durationMonths": 48, "campus": "Kaunas", "tuitionEur": 3250, "note": "26 English-taught bachelor programmes; enumerate from admissions.ktu.edu/programmes/b/." },
+        { "name": "Engineering / Informatics / Mathematics programmes (various)", "level": "BACHELOR", "fieldOfStudy": "Engineering & IT", "durationMonths": 48, "campus": "Kaunas", "tuitionEur": 4201 },
+        { "name": "Architecture (integrated)", "level": "BACHELOR", "fieldOfStudy": "Architecture", "durationMonths": 60, "campus": "Kaunas", "tuitionEur": 5676 },
+        { "name": "Business / Economics programmes (various)", "level": "MASTER", "fieldOfStudy": "Business", "durationMonths": 24, "campus": "Kaunas", "tuitionEur": 4690 },
+        { "name": "Engineering / Informatics / Sciences programmes (various)", "level": "MASTER", "fieldOfStudy": "Engineering & IT", "durationMonths": 24, "campus": "Kaunas", "tuitionEur": 5641 }
+      ],
+      "sourceUrls": ["https://admissions.ktu.edu/bachelor/", "https://admissions.ktu.edu/master/", "https://admissions.ktu.edu/programmes/b/"],
+      "confidence": "HIGH"
+    },
+    {
+      "name": "Vytautas Magnus University (VMU)",
+      "shortName": "VMU",
+      "type": "UNIVERSITY",
+      "ownership": "PUBLIC",
+      "city": "Kaunas",
+      "websiteUrl": "https://www.vdu.lt/en/",
+      "applyUrl": "https://apply.vdu.lt/",
+      "applicationFeeEur": 150,
+      "registrationFeeEur": null,
+      "deadlines": {
+        "bachelorNonEu": null,
+        "masterNonEu": null,
+        "note": "September intake only for 2026/27 (no February intake); studies begin 24 Aug 2026. The closing date was not on the fetched pages — confirm on apply.vdu.lt. Recognition decided within 20 working days."
+      },
+      "english": {
+        "bachelor": { "cefr": "B2", "ielts": 5.5, "note": "B2 certificate required inside the application (IELTS 5.5 equivalent)." },
+        "master": { "cefr": "B2", "ielts": 5.5 },
+        "confidence": "HIGH"
+      },
+      "academic": {
+        "general": "Diploma + supplement with CGPA ≥ 60% (55% for Algeria/Morocco/Tunisia; 65% for Egypt). Motivation letter 1,200–3,000 characters, CV in English, passport valid ≥ 2 years, photo 3×4.",
+        "payment": "Application and tuition via Flywire."
+      },
+      "tuition": {
+        "bachelorRangeEur": [3400, 9600],
+        "masterRangeEur": [5000, 10624],
+        "perEctsEur": [56.66, 177.06],
+        "confidence": "HIGH"
+      },
+      "programmes": [
+        { "name": "Business Administration", "level": "BACHELOR", "fieldOfStudy": "Business", "durationMonths": 48, "campus": "Kaunas", "tuitionEur": 3400 },
+        { "name": "Economics and Finance", "level": "BACHELOR", "fieldOfStudy": "Economics", "durationMonths": 48, "campus": "Kaunas", "tuitionEur": 3400 },
+        { "name": "Political Studies", "level": "BACHELOR", "fieldOfStudy": "Political Science", "durationMonths": 48, "campus": "Kaunas", "tuitionEur": 3400 },
+        { "name": "English Philology", "level": "BACHELOR", "fieldOfStudy": "Linguistics", "durationMonths": 48, "campus": "Kaunas", "tuitionEur": 4400 },
+        { "name": "Biology and Genetics", "level": "BACHELOR", "fieldOfStudy": "Biology", "durationMonths": 48, "campus": "Kaunas", "tuitionEur": 4400 },
+        { "name": "Informatics Systems", "level": "BACHELOR", "fieldOfStudy": "Computer Science", "durationMonths": 48, "campus": "Kaunas", "tuitionEur": 4400 },
+        { "name": "Music Production", "level": "BACHELOR", "fieldOfStudy": "Music", "durationMonths": 48, "campus": "Kaunas", "tuitionEur": 9600 },
+        { "name": "Performing Arts", "level": "BACHELOR", "fieldOfStudy": "Arts", "durationMonths": 48, "campus": "Kaunas", "tuitionEur": 9600 },
+        { "name": "Applied English Linguistics", "level": "MASTER", "fieldOfStudy": "Linguistics", "durationMonths": 24, "campus": "Kaunas", "tuitionEur": 5000 },
+        { "name": "Diplomacy and International Relations", "level": "MASTER", "fieldOfStudy": "International Relations", "durationMonths": 24, "campus": "Kaunas", "tuitionEur": 5000 },
+        { "name": "Molecular Biology and Biotechnology", "level": "MASTER", "fieldOfStudy": "Biotechnology", "durationMonths": 24, "campus": "Kaunas", "tuitionEur": 6000 },
+        { "name": "Sports Business MBA", "level": "MASTER", "fieldOfStudy": "Business", "durationMonths": 24, "campus": "Kaunas", "tuitionEur": 8000 },
+        { "name": "Performing Arts", "level": "MASTER", "fieldOfStudy": "Arts", "durationMonths": 24, "campus": "Kaunas", "tuitionEur": 10624 }
+      ],
+      "sourceUrls": ["https://www.vdu.lt/en/studies/degree-studies/tuition-fees/", "https://www.vdu.lt/en/studies/degree-studies/", "https://www.vdu.lt/en/studies/degree-studies/faq/"],
+      "confidence": "HIGH"
+    },
+    {
+      "name": "Lithuanian University of Health Sciences (LSMU)",
+      "shortName": "LSMU",
+      "type": "UNIVERSITY",
+      "ownership": "PUBLIC",
+      "city": "Kaunas",
+      "websiteUrl": "https://lsmu.lt/en/",
+      "applyUrl": "https://apply.lsmuni.lt/",
+      "applicationFeeEur": 150,
+      "registrationFeeEur": 250,
+      "depositNote": "Non-EU: deposit equal to half the yearly tuition for Medicine, Odontology, Pharmacy and Veterinary Medicine; a full year's tuition for all other programmes. Refund rules to be confirmed.",
+      "deadlines": {
+        "bachelorNonEu": "2026-07-06",
+        "masterNonEu": "2026-07-06",
+        "secondRound": "2026-07-30",
+        "note": "Applications opened 1 Nov 2025. Entrance test: online interview a few days before a 90-minute written test — Biology + Chemistry (30 MCQs each), or Mathematics + Biology for Psychology; results next day. Test waived for Nursing, Physiotherapy, Occupational Therapy, Dental Hygiene (bachelor) and Applied Public Health, Advanced Nursing Practice (master) with strong relevant grades."
+      },
+      "english": {
+        "bachelor": { "cefr": "B1", "ielts": 5.5, "pte": 55, "duolingo": 95, "toeflIbt": null, "note": "Page text lists 'IELTS above 5.5', 'PTE 55–67', 'Duolingo 95', 'CEFR B1'; the TOEFL figure printed ('4.0') is not credible — confirm. An English test is given during admission if no certificate." },
+        "master": { "cefr": "B1", "ielts": 5.5, "note": "Same list as bachelor." },
+        "confidence": "MEDIUM"
+      },
+      "academic": {
+        "general": "Legalised matriculation certificate and transcripts showing Biology and Chemistry; entrance test. Masters: legalised degree + transcripts.",
+        "pakistan": "Non-Hague: double legalisation via Ministry of Foreign Affairs. LSMU notes non-EU students cannot use a national D visa since 1 Jul 2023 and must obtain a TRP through VFS Global — Pakistan is not on that list (see crossCutting.migration).",
+        "scholarships": "None for English-taught programmes — all self-funded."
+      },
+      "tuition": {
+        "confidence": "HIGH"
+      },
+      "programmes": [
+        { "name": "Medicine", "level": "BACHELOR", "fieldOfStudy": "Medicine", "durationMonths": 72, "campus": "Kaunas", "tuitionEur": 12800, "tuitionNote": "Years I–III €12,800; years IV–VI €13,300. Integrated master's." },
+        { "name": "Odontology (Dentistry)", "level": "BACHELOR", "fieldOfStudy": "Dentistry", "durationMonths": 60, "campus": "Kaunas", "tuitionEur": 13600, "tuitionNote": "Years I–III €13,600; years IV–V €14,100." },
+        { "name": "Pharmacy", "level": "BACHELOR", "fieldOfStudy": "Pharmacy", "durationMonths": 60, "campus": "Kaunas", "tuitionEur": 5600, "tuitionNote": "Years I–III €5,600; years IV–V €5,700." },
+        { "name": "Veterinary Medicine", "level": "BACHELOR", "fieldOfStudy": "Veterinary Medicine", "durationMonths": 72, "campus": "Kaunas", "tuitionEur": 9200, "tuitionNote": "Years I–III €9,200; years IV–VI €10,700." },
+        { "name": "Nursing", "level": "BACHELOR", "fieldOfStudy": "Nursing", "durationMonths": 48, "campus": "Kaunas", "tuitionEur": 4300 },
+        { "name": "Physiotherapy", "level": "BACHELOR", "fieldOfStudy": "Physiotherapy", "durationMonths": 42, "campus": "Kaunas", "tuitionEur": 4201 },
+        { "name": "Occupational Therapy", "level": "BACHELOR", "fieldOfStudy": "Occupational Therapy", "durationMonths": 42, "campus": "Kaunas", "tuitionEur": 4201 },
+        { "name": "Dental Hygiene", "level": "BACHELOR", "fieldOfStudy": "Dental Hygiene", "durationMonths": 42, "campus": "Kaunas", "tuitionEur": 4201 },
+        { "name": "Health Psychology", "level": "BACHELOR", "fieldOfStudy": "Psychology", "durationMonths": 42, "campus": "Kaunas", "tuitionEur": 4201 },
+        { "name": "Medical and Veterinary Genetics", "level": "BACHELOR", "fieldOfStudy": "Genetics", "durationMonths": 42, "campus": "Kaunas", "tuitionEur": 4201 },
+        { "name": "Medical and Veterinary Biochemistry", "level": "BACHELOR", "fieldOfStudy": "Biochemistry", "durationMonths": 42, "campus": "Kaunas", "tuitionEur": 4201 },
+        { "name": "Applied Public Health", "level": "MASTER", "fieldOfStudy": "Public Health", "durationMonths": 24, "campus": "Kaunas", "tuitionEur": 5641 },
+        { "name": "Food Science", "level": "MASTER", "fieldOfStudy": "Food Science", "durationMonths": 24, "campus": "Kaunas", "tuitionEur": 5641 },
+        { "name": "Lifestyle Medicine", "level": "MASTER", "fieldOfStudy": "Medicine", "durationMonths": 24, "campus": "Kaunas", "tuitionEur": 5641 },
+        { "name": "Clinical Health Psychology", "level": "MASTER", "fieldOfStudy": "Psychology", "durationMonths": 24, "campus": "Kaunas", "tuitionEur": 5641 },
+        { "name": "Medicinal Chemistry", "level": "MASTER", "fieldOfStudy": "Chemistry", "durationMonths": 24, "campus": "Kaunas", "tuitionEur": 5641 },
+        { "name": "Laboratory Medicine Biology", "level": "MASTER", "fieldOfStudy": "Biomedical Science", "durationMonths": 24, "campus": "Kaunas", "tuitionEur": 7116 }
+      ],
+      "sourceUrls": ["https://lsmu.lt/en/admission/tuition-fees/", "https://lsmu.lt/en/admission/admission-process/", "https://lsmu.lt/wp-content/uploads/RULES-FOR-ADMITTING-STUDENTS-TO-THE-LITHUANIAN-UNIVERSITY-OF-HEALTH-SCIENCES-IN-2026.pdf"],
+      "confidence": "HIGH"
+    },
+    {
+      "name": "Mykolas Romeris University (MRU)",
+      "shortName": "MRU",
+      "type": "UNIVERSITY",
+      "ownership": "PUBLIC",
+      "city": "Vilnius",
+      "websiteUrl": "https://www.mruni.eu/en/",
+      "applyUrl": "https://apply.mruni.eu/",
+      "applicationFeeEur": 100,
+      "registrationFeeEur": 50,
+      "deadlines": {
+        "bachelorNonEu": "2026-07-24",
+        "masterNonEu": "2026-07-24",
+        "note": "Applications open 1 Jan 2026; 24 Jul 2026 is the deadline for EU/EFTA applicants and countries with a VFS centre or no TRP need — applicants from other countries have an EARLIER deadline that must be confirmed (mruni.eu was unreachable during research)."
+      },
+      "english": { "bachelor": { "cefr": "B2", "ielts": null }, "master": { "cefr": "B2", "ielts": null }, "confidence": "LOW" },
+      "academic": { "general": "Not fetched — site unreachable during research. Fields: law, psychology, public governance, business, communication." },
+      "tuition": { "bachelorRangeEur": [3176, 5500], "masterRangeEur": [3176, 5500], "note": "Range from secondary sources.", "confidence": "LOW" },
+      "programmes": [],
+      "sourceUrls": ["https://www.mruni.eu/en/admission_procedure/", "https://www.mruni.eu/en/admission_procedure/fees/"],
+      "confidence": "LOW"
+    },
+    {
+      "name": "ISM University of Management and Economics",
+      "shortName": "ISM",
+      "type": "UNIVERSITY",
+      "ownership": "PRIVATE",
+      "city": "Vilnius",
+      "websiteUrl": "https://www.ism.lt/en/",
+      "applyUrl": "https://www.ism.lt/en/admission/",
+      "applicationFeeEur": 100,
+      "registrationFeeEur": null,
+      "deadlines": {
+        "early": "2026-04-30",
+        "bachelorNonEu": "2026-05-31",
+        "masterNonEu": "2026-05-31",
+        "visaFreeOrCis": "2026-07-24",
+        "additional": "2026-08-14",
+        "note": "'Visa regime countries' (Pakistan included) must apply by 31 May 2026. Application fee waived during early admission."
+      },
+      "english": {
+        "bachelor": { "cefr": "B2", "ielts": 6.0, "toeflIbt": 60, "pte": 52, "duolingo": 115, "cambridge": "B2 169", "ismTest": 55 },
+        "master": { "cefr": "C1", "ielts": 6.5, "toeflIbt": 79, "pte": 59, "duolingo": 125, "cambridge": "B2 First 176", "ismTest": 70 },
+        "confidence": "HIGH"
+      },
+      "academic": {
+        "general": "Bachelor: completed secondary education + state mathematics exam or ISM math test; scholarship test (maths, English, logic). Master: bachelor's degree; some programmes need 18+ ECTS in relevant fields; motivation + business case for scholarships.",
+        "note": "Same tuition for EU and non-EU at bachelor level."
+      },
+      "tuition": {
+        "bachelorPerSemesterEur": 3570,
+        "bachelorPerYearEur": 7140,
+        "bachelorTotalEur": 24990,
+        "masterNonEuPerSemesterEur": 3675,
+        "masterNonEuPerYearEur": 7350,
+        "masterNonEuTotalEur": 14700,
+        "confidence": "HIGH"
+      },
+      "programmes": [
+        { "name": "Business Management and Marketing", "level": "BACHELOR", "fieldOfStudy": "Business", "durationMonths": 42, "campus": "Vilnius", "tuitionEur": 7140 },
+        { "name": "Economics and Data Analytics", "level": "BACHELOR", "fieldOfStudy": "Economics", "durationMonths": 42, "campus": "Vilnius", "tuitionEur": 7140 },
+        { "name": "Economics and Politics", "level": "BACHELOR", "fieldOfStudy": "Economics", "durationMonths": 42, "campus": "Vilnius", "tuitionEur": 7140 },
+        { "name": "Finance", "level": "BACHELOR", "fieldOfStudy": "Finance", "durationMonths": 42, "campus": "Vilnius", "tuitionEur": 7140 },
+        { "name": "International Business and Communication", "level": "BACHELOR", "fieldOfStudy": "Business", "durationMonths": 42, "campus": "Vilnius", "tuitionEur": 7140 },
+        { "name": "Entrepreneurship and Innovation", "level": "BACHELOR", "fieldOfStudy": "Entrepreneurship", "durationMonths": 36, "campus": "Vilnius", "tuitionEur": 8330 },
+        { "name": "International Marketing and Management", "level": "MASTER", "fieldOfStudy": "Marketing", "durationMonths": 24, "campus": "Vilnius", "tuitionEur": 7350 },
+        { "name": "Financial Economics", "level": "MASTER", "fieldOfStudy": "Economics", "durationMonths": 24, "campus": "Vilnius", "tuitionEur": 7350 },
+        { "name": "Innovation and Technology Management", "level": "MASTER", "fieldOfStudy": "Management", "durationMonths": 18, "campus": "Vilnius", "tuitionEur": 9800, "tuitionNote": "€4,900 per semester, 90 ECTS." },
+        { "name": "Global Leadership and Strategy", "level": "MASTER", "fieldOfStudy": "Management", "durationMonths": 18, "campus": "Vilnius", "tuitionEur": 9800, "tuitionNote": "€4,900 per semester, 90 ECTS." }
+      ],
+      "sourceUrls": ["https://www.ism.lt/en/admission/", "https://elearning.ism.lt/pluginfile.php/751/coursecat/description/Study%20pricelist%20for%202026-2027%20AY.xlsx20251204.pdf"],
+      "confidence": "HIGH"
+    },
+    {
+      "name": "LCC International University",
+      "shortName": "LCC",
+      "type": "UNIVERSITY",
+      "ownership": "PRIVATE",
+      "city": "Klaipėda",
+      "websiteUrl": "https://lcc.lt/",
+      "applyUrl": "https://admissions.lcc.lt/",
+      "applicationFeeEur": null,
+      "registrationFeeEur": null,
+      "deadlines": {
+        "fall2026Early": "2026-02-15",
+        "bachelorNonEu": "2026-03-15",
+        "visaFree": "2026-07-15",
+        "spring2027Early": "2026-08-15",
+        "spring2027General": "2026-09-15",
+        "note": "Two intakes: August (fall) and January (spring). Non-EU applicants needing a permit should use the general deadline (15 Mar for fall, 15 Sep for spring). Decision within 10 working days. Application fee waived until 15 Jan 2026; amount otherwise not stated."
+      },
+      "english": {
+        "bachelor": { "cefr": "B2", "ielts": 6.0, "toeflIbt": 61, "toeflItp": 500, "pte": 53, "cambridge": "CAE/CPE grade C", "languageCert": "ESOL B2", "note": "Certificate not older than 2 years; waiver for native speakers / a year of study in an English-speaking country." },
+        "master": { "cefr": "B2", "ielts": 6.0 },
+        "confidence": "HIGH"
+      },
+      "academic": {
+        "general": "Selection: 40% grades from the last three years of high school, 30% English, 30% interview (online). Liberal-arts, American-style curriculum.",
+        "financialAid": "Need-based aid 10–80% of tuition (9 of 10 applicants approved); 16 scholarships covering 50–100%; average aid €1,652/year; up to 90% of tuition coverable."
+      },
+      "tuition": { "bachelorPerYearEur": 4290, "masterTotalEur": 6000, "housingPerSemesterEur": 575, "confidence": "HIGH" },
+      "programmes": [
+        { "name": "Psychology (BA)", "level": "BACHELOR", "fieldOfStudy": "Psychology", "durationMonths": 48, "campus": "Klaipėda", "tuitionEur": 4290 },
+        { "name": "International Relations and Development (BA)", "level": "BACHELOR", "fieldOfStudy": "International Relations", "durationMonths": 48, "campus": "Klaipėda", "tuitionEur": 4290 },
+        { "name": "Business Administration (BA)", "level": "BACHELOR", "fieldOfStudy": "Business", "durationMonths": 48, "campus": "Klaipėda", "tuitionEur": 4290 },
+        { "name": "MA TESOL", "level": "MASTER", "fieldOfStudy": "Education / Linguistics", "durationMonths": 24, "campus": "Klaipėda", "tuitionEur": 3000, "tuitionNote": "€6,000 for the full 2-year programme." },
+        { "name": "MA International Management (IINGOL)", "level": "MASTER", "fieldOfStudy": "Management", "durationMonths": 24, "campus": "Klaipėda", "tuitionEur": 3000, "tuitionNote": "€6,000 for the full 2-year programme." }
+      ],
+      "sourceUrls": ["https://lcc.lt/admissions/", "https://lcc.lt/tuition-and-fees"],
+      "confidence": "HIGH"
+    },
+    {
+      "name": "Klaipėda University",
+      "shortName": "KU",
+      "type": "UNIVERSITY",
+      "ownership": "PUBLIC",
+      "city": "Klaipėda",
+      "websiteUrl": "https://www.ku.lt/en/",
+      "applyUrl": "https://apply.ku.lt/",
+      "applicationFeeEur": 180,
+      "applicationFeeNote": "€75 for EU and Eastern Partnership countries.",
+      "registrationFeeEur": null,
+      "deadlines": {
+        "spring2027": "2026-11-01",
+        "bachelorNonEu": null,
+        "masterNonEu": null,
+        "note": "Spring 2027 intake (start Feb 2027) deadline 1 Nov 2026 for Management; Social Work and Crisis Intervention (BA) and Business Management; Regional Governance; Healthcare Management (MA). Autumn deadlines not fetched. Tuition is refunded if visa/TRP is rejected."
+      },
+      "english": { "bachelor": { "cefr": "B2", "ielts": null }, "master": { "cefr": "B2", "ielts": null }, "confidence": "LOW" },
+      "academic": { "general": "Application → academic commission → online interview if shortlisted → pay tuition → Letter of Acceptance. Apostilled documents required. 25 English-taught programmes (14 bachelor, 10 master)." },
+      "tuition": { "note": "Not published on the pages fetched.", "confidence": "LOW" },
+      "programmes": [
+        { "name": "Management", "level": "BACHELOR", "fieldOfStudy": "Management", "durationMonths": 48, "campus": "Klaipėda", "tuitionEur": null },
+        { "name": "Social Work and Crisis Intervention", "level": "BACHELOR", "fieldOfStudy": "Social Work", "durationMonths": 48, "campus": "Klaipėda", "tuitionEur": null },
+        { "name": "Business Management", "level": "MASTER", "fieldOfStudy": "Business", "durationMonths": 24, "campus": "Klaipėda", "tuitionEur": null },
+        { "name": "Regional Governance", "level": "MASTER", "fieldOfStudy": "Public Administration", "durationMonths": 24, "campus": "Klaipėda", "tuitionEur": null },
+        { "name": "Healthcare Management", "level": "MASTER", "fieldOfStudy": "Health Management", "durationMonths": 24, "campus": "Klaipėda", "tuitionEur": null }
+      ],
+      "sourceUrls": ["https://apply.ku.lt/news/new/74-application-procedure-degree-students-klaipeda-university", "https://apply.ku.lt/courses/search"],
+      "confidence": "LOW"
+    },
+    {
+      "name": "Kazimieras Simonavičius University (KSU)",
+      "shortName": "KSU",
+      "type": "UNIVERSITY",
+      "ownership": "PRIVATE",
+      "city": "Vilnius",
+      "websiteUrl": "https://ksu.lt/en/",
+      "applyUrl": "https://apply.ksu.lt/courses/",
+      "applicationFeeEur": null,
+      "registrationFeeEur": null,
+      "deadlines": { "bachelorNonEu": null, "masterNonEu": null, "note": "Fall 2026/27 and Spring 2027 intakes open; online-study option; deadlines not fetched." },
+      "english": { "bachelor": { "cefr": "B2", "ielts": null }, "master": { "cefr": "B2", "ielts": null }, "confidence": "LOW" },
+      "academic": { "general": "Schools: Business Innovation and Management; Creative Economy Institute; Institute of Law and Technology. 3 bachelor + 4 master programmes.", "scholarships": "30% Talent Scholarship in first bachelor year (average grade 8.5, motivation letter, B2); master scholarships 20/50/80% by performance." },
+      "tuition": { "bachelorRangeEur": [3000, 6000], "masterRangeEur": [3500, 4500], "note": "Secondary sources.", "confidence": "LOW" },
+      "programmes": [],
+      "sourceUrls": ["https://apply.ksu.lt/courses/"],
+      "confidence": "LOW"
+    }
+  ]
+}
